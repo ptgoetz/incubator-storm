@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.apache.storm</groupId>
+  <artifactId>storm</artifactId>
+  <packaging>pom</packaging>
+  <version>0.9.1-incubating-SNAPSHOT</version>
+  <name>storm</name>
+  <description>Distributed and fault-tolerant realtime computation</description>
+  <url>http://storm-project.net</url>
+
+    <prerequisites>
+        <maven>3.0.0</maven>
+    </prerequisites>
+
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <mailingLists>
+    <mailingList>
+      <name>Storm user mailing list</name>
+      <subscribe/>
+      <unsubscribe/>
+      <post>user@storm.incubator.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/incubator-storm-user/</archive>
+    </mailingList>
+  </mailingLists>
+
+  <scm>
+    <connection>scm:git:git://github.com/nathanmarz/storm.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/nathanmarz/storm.git</developerConnection>
+    <tag/>
+    <url>https://github.com/nathanmarz/storm</url>
+  </scm>
+
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>http://repo1.maven.org/maven2/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+        <repository>
+            <id>clojars</id>
+            <url>https://clojars.org/repo/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+    </repositories>
+
+  <build>
+
+  </build>
+
+
+    <modules>
+    <module>storm-core</module>
+    <module>storm-console-logging</module>
+        <module>storm-lib</module>
+    </modules>
+
+  <dependencies>
+
+  </dependencies>
+</project>
+
