@@ -32,10 +32,10 @@
   </mailingLists>
 
   <scm>
-    <connection>scm:git:git://github.com/nathanmarz/storm.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/nathanmarz/storm.git</developerConnection>
+    <connection>scm:git:git://github.com/apache/incubator-storm.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/apache/incubator-storm.git</developerConnection>
     <tag/>
-    <url>https://github.com/nathanmarz/storm</url>
+    <url>https://github.com/apache/incubator-storm</url>
   </scm>
 
     <repositories>
@@ -63,6 +63,18 @@
 
   <build>
 
+      <plugins>
+          <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-assembly-plugin</artifactId>
+              <version>2.2.2</version>
+              <configuration>
+                  <descriptors>
+                      <descriptor>${project.basedir}/storm-dist/release.xml</descriptor>
+                  </descriptors>
+              </configuration>
+          </plugin>
+      </plugins>
   </build>
 
 
