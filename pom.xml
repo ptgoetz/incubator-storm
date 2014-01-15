@@ -241,6 +241,11 @@
     </profiles>
 
     <distributionManagement>
+    	<repository>
+    	    <id>${repoid}</id>
+    	    <name>${reponame}</name>
+    	    <url>${repourl}</url>
+    	</repository>
         <repository>
             <uniqueVersion>false</uniqueVersion>
             <id>releases</id>
