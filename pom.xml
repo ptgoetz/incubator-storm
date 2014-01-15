@@ -246,13 +246,6 @@
     	    <name>${reponame}</name>
     	    <url>${repourl}</url>
     	</repository>
-        <repository>
-            <uniqueVersion>false</uniqueVersion>
-            <id>releases</id>
-            <name>Local Release Repo</name>
-            <url>file:///tmp/repo/</url>
-            <layout>default</layout>
-        </repository>
         <snapshotRepository>
             <uniqueVersion>false</uniqueVersion>
             <id>snapshots</id>
