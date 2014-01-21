@@ -1,44 +1,31 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.hmsonline</groupId>
+	
+    <parent>
+        <artifactId>storm</artifactId>
+        <groupId>org.apache.storm</groupId>
+        <version>0.9.1-incubating-SNAPSHOT</version>
+    </parent>
+	
+	<groupId>org.apache.storm</groupId>
 	<artifactId>storm-cassandra-examples</artifactId>
-	<version>0.4.0-rc5-SNAPSHOT</version>
 	<name>Storm Cassandra Examples</name>
 	<description>Storm Cassandra Examples</description>
-	<repositories>
-		<repository>
-			<id>clojars.org</id>
-			<url>http://clojars.org/repo</url>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>clojars.org</id>
-			<url>http://clojars.org/repo</url>
-		</pluginRepository>
-	</pluginRepositories>
-	<properties>
-		<storm.version>0.8.1</storm.version>
-	</properties>
+
+
 	<dependencies>
 		<dependency>
-			<groupId>com.hmsonline</groupId>
+			<groupId>org.apache.storm</groupId>
 			<artifactId>storm-cassandra</artifactId>
-			<version>0.4.0-rc4-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>storm</groupId>
-			<artifactId>storm</artifactId>
-			<version>${storm.version}</version>
+			<groupId>org.apache.storm</groupId>
+			<artifactId>storm-core</artifactId>
+			<version>${project.version}</version>
 			<!-- keep storm out of the jar-with-dependencies -->
 			<scope>provided</scope>
-			<exclusions>
-				<exclusion>
-					<artifactId>guava</artifactId>
-					<groupId>com.google.guava</groupId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 	</dependencies>
 	<build>
@@ -93,16 +80,6 @@
 					</systemProperties>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.5.1</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>
-
 		</plugins>
 
 	</build>
