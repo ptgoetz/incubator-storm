@@ -134,6 +134,8 @@
         <module>contrib/storm-starter</module>
 		<module>contrib/storm-kafka</module>
 		<module>contrib/storm-cassandra</module>
+		<module>contrib/storm-jms</module>
+		<module>contrib/storm-rest</module>
     </modules>
 
     <scm>
