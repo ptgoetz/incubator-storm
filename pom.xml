@@ -249,18 +249,6 @@
     </profiles>
 
     <distributionManagement>
-    	<repository>
-    	    <id>${repoid}</id>
-    	    <name>${reponame}</name>
-    	    <url>${repourl}</url>
-    	</repository>
-        <snapshotRepository>
-            <uniqueVersion>false</uniqueVersion>
-            <id>snapshots</id>
-            <name>Local Snapshot Repo</name>
-            <url>file:///tmp/repo/</url>
-            <layout>default</layout>
-        </snapshotRepository>
         <site>
             <id>storm.maven.website</id>
             <name>Storm Website</name>
