@@ -52,7 +52,41 @@
             </includes>
             <excludes/>
         </fileSet>
-
+       <fileSet>
+           <directory>${project.basedir}/../contrib/storm-starter/target</directory>
+           <outputDirectory>lib</outputDirectory>
+           <includes>
+                <include>storm*jar</include>
+           </includes>
+       </fileSet>
+       <fileSet>
+           <directory>${project.basedir}/../contrib/storm-cassandra/target</directory>
+           <outputDirectory>lib</outputDirectory>
+           <includes>
+                <include>storm*jar</include>
+           </includes>
+       </fileSet>
+       <fileSet>
+           <directory>${project.basedir}/../contrib/storm-jms/target</directory>
+           <outputDirectory>lib</outputDirectory>
+           <includes>
+                <include>storm*jar</include>
+           </includes>
+       </fileSet>
+       <fileSet>
+           <directory>${project.basedir}/../contrib/storm-kafka/target</directory>
+           <outputDirectory>lib</outputDirectory>
+           <includes>
+                <include>storm*jar</include>
+           </includes>
+       </fileSet>
+       <fileSet>
+           <directory>${project.basedir}/../contrib/storm-rest/target</directory>
+           <outputDirectory>lib</outputDirectory>
+           <includes>
+                <include>storm*jar</include>
+           </includes>
+       </fileSet>
 
     </fileSets>
 
