@@ -54,35 +54,35 @@
         </fileSet>
        <fileSet>
            <directory>${project.basedir}/../contrib/storm-starter/target</directory>
-           <outputDirectory>lib</outputDirectory>
+           <outputDirectory>contrib/storm-starter</outputDirectory>
            <includes>
                 <include>storm*jar</include>
            </includes>
        </fileSet>
        <fileSet>
            <directory>${project.basedir}/../contrib/storm-cassandra/target</directory>
-           <outputDirectory>lib</outputDirectory>
+           <outputDirectory>contrib/storm-cassandra</outputDirectory>
            <includes>
                 <include>storm*jar</include>
            </includes>
        </fileSet>
        <fileSet>
            <directory>${project.basedir}/../contrib/storm-jms/target</directory>
-           <outputDirectory>lib</outputDirectory>
+           <outputDirectory>contrib/storm-jms</outputDirectory>
            <includes>
                 <include>storm*jar</include>
            </includes>
        </fileSet>
        <fileSet>
            <directory>${project.basedir}/../contrib/storm-kafka/target</directory>
-           <outputDirectory>lib</outputDirectory>
+           <outputDirectory>contrib/storm-kafka</outputDirectory>
            <includes>
                 <include>storm*jar</include>
            </includes>
        </fileSet>
        <fileSet>
            <directory>${project.basedir}/../contrib/storm-rest/target</directory>
-           <outputDirectory>lib</outputDirectory>
+           <outputDirectory>contrib/storm-rest</outputDirectory>
            <includes>
                 <include>storm*jar</include>
            </includes>
