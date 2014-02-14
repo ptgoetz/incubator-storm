@@ -144,6 +144,21 @@
                 <include>README.*</include>
             </includes>
         </fileSet>
+		
+        <fileSet>
+            <directory>${project.basedir}/../../contrib/storm-hbase/target</directory>
+            <outputDirectory>contrib/storm-hbase</outputDirectory>
+            <includes>
+                <include>storm*jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/../../contrib/storm-hbase</directory>
+            <outputDirectory>contrib/storm-hbase</outputDirectory>
+            <includes>
+                <include>README.*</include>
+            </includes>
+        </fileSet>
 
         <fileSet>
             <directory>${project.basedir}/../../contrib/storm-jmxetric</directory>
