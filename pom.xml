@@ -136,6 +136,7 @@
 		<module>contrib/storm-jms</module>
 		<module>contrib/storm-rest</module>
 		<module>contrib/storm-hdfs</module>
+		<module>contrib/storm-hbase</module>
     </modules>
 
     <scm>
