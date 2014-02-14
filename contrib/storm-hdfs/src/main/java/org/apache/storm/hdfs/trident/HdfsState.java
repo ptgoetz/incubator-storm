@@ -2,20 +2,23 @@ package org.apache.storm.hdfs.trident;
 
 import backtype.storm.task.IMetricsContext;
 import backtype.storm.topology.FailedException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.storm.hdfs.common.rotation.RotationAction;
 import org.apache.storm.hdfs.trident.format.FileNameFormat;
 import org.apache.storm.hdfs.trident.format.RecordFormat;
 import org.apache.storm.hdfs.trident.format.SequenceFormat;
 import org.apache.storm.hdfs.trident.rotation.FileRotationPolicy;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import storm.trident.operation.TridentCollector;
 import storm.trident.state.State;
 import storm.trident.tuple.TridentTuple;
@@ -29,6 +32,9 @@ import java.util.Map;
 
 public class HdfsState implements State {
 
+  public static final String STORM_KEYTAB_FILE_KEY = "storm.keytab.file";
+  public static final String STORM_USER_NAME_KEY = "storm.kerberos.principal";
+  
     public static abstract class Options implements Serializable {
 
         protected String fsUrl;
@@ -124,6 +130,10 @@ public class HdfsState implements State {
         @Override
         void doPrepare(Map conf, int partitionIndex, int numPartitions) throws IOException {
             LOG.info("Preparing HDFS Bolt...");
+            if (UserGroupInformation.isSecurityEnabled()) {
+              SecurityUtil.login(hdfsConfig, STORM_KEYTAB_FILE_KEY,
+                  STORM_USER_NAME_KEY);
+            }
             this.fs = FileSystem.get(URI.create(this.fsUrl), hdfsConfig);
         }
 
@@ -205,7 +215,10 @@ public class HdfsState implements State {
         void doPrepare(Map conf, int partitionIndex, int numPartitions) throws IOException {
             LOG.info("Preparing Sequence File State...");
             if (this.format == null) throw new IllegalStateException("SequenceFormat must be specified.");
-
+            if (UserGroupInformation.isSecurityEnabled()) {
+              SecurityUtil.login(hdfsConfig, STORM_KEYTAB_FILE_KEY,
+                  STORM_USER_NAME_KEY);
+            }
             this.fs = FileSystem.get(URI.create(this.fsUrl), hdfsConfig);
             this.codecFactory = new CompressionCodecFactory(hdfsConfig);
         }
