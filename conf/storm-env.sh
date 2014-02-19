@@ -17,25 +17,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
 
-# Resolve links - $0 may be a softlink
-PRG="${0}"
+# Set Storm specific environment variables here.
 
-while [ -h "${PRG}" ]; do
-  ls=`ls -ld "${PRG}"`
-  link=`expr "$ls" : '.*-> \(.*\)$'`
-  if expr "$link" : '/.*' > /dev/null; then
-    PRG="$link"
-  else
-    PRG=`dirname "${PRG}"`/"$link"
-  fi
-done
+# The java implementation to use.
+export JAVA_HOME=${JAVA_HOME}
 
-STORM_BIN_DIR=`dirname ${PRG}`
-STORM_BASE_DIR=`cd ${STORM_BIN_DIR}/..;pwd`
-export STORM_BASE_DIR
+# export STORM_CONF_DIR=""
 
-. ${STORM_BASE_DIR}/bin/storm-config.sh
-
-/usr/bin/python ${STORM_BIN_DIR}/storm.py $@
