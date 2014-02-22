@@ -80,6 +80,50 @@ public class NimbusResource {
         return retval;
     }
 
+    @GET
+    @Path("/topology/{id}/summary")
+    public Object topologyDetail(@PathParam("id")String id) throws Exception {
+        HashMap<String, Object> retval = new HashMap<String, Object>();
+
+
+        TopologyInfo info  = this.client.getTopologyInfo(id);
+
+
+
+        for(ExecutorSummary execSum : info.get_executors()){
+            String compId = execSum.get_component_id();
+
+            if(!compId.startsWith("__")){
+                ExecutorStats stats = execSum.get_stats();
+                if(stats.get_specific().is_set_bolt()){
+                    System.out.println("BOLT");
+                    BoltStats bolt = stats.get_specific().get_bolt();
+//                    bolt.
+                }
+                if(stats.get_specific().is_set_spout()){
+                    System.out.println("SPOUT");
+                    SpoutStats spout = stats.get_specific().get_spout();
+                }
+
+//                stats.
+                System.out.println(compId + " : " + execSum.get_host() + " : " + execSum.get_port());
+            }
+        }
+
+        StormTopology st = this.client.getTopology(id);
+//        st.
+        Map<String, Bolt> boltMap = st.get_bolts();
+        Map<String, SpoutSpec> spoutMap = st.get_spouts();
+
+//        ArrayList<Map<String, Object>> boltList = new ArrayList<Map<String, Object>>();
+//        for(String boltKey : boltMap.keySet()){
+//            Map<String, Object> boltInfo = new HashMap<String, Object>();
+//            Bolt bolt = boltMap.get(boltKey);
+//            bolt.get_bolt_object().
+//        }
+
+        return null;
+    }
 
     @GET
     @Path("/topology/summary")
