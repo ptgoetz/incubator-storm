@@ -22,8 +22,6 @@ import random
 import subprocess as sub
 import re
 
-sys.path.append(os.path.join('PyYAML-3.10', 'lib'))
-
 def identity(x):
     return x
 
