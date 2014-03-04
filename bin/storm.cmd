@@ -33,9 +33,18 @@
 @rem
 @rem   STORM_ROOT_LOGGER The root appender. Default is INFO,console
 @rem
+setlocal enabledelayedexpansion
+
+@rem if running as a service, log to (daily rolling) files instead of console
+if "%1" == "--service" (
+  if not defined HADOOP_ROOT_LOGGER (
+    set STORM_ROOT_LOGGER=INFO,DRFA
+  )
+  set service_entry=true
+  shift
+)
 
 :main
-  setlocal enabledelayedexpansion
 
   call %~dp0storm-config.cmd
 
@@ -80,7 +89,12 @@
     %JAVA% %JAVA_HEAP_MAX% %STORM_OPTS% %STORM_LOG_FILE% %CLASS% %storm-command-arguments%
   )
   set path=%PATH%;%STORM_BIN_DIR%;%STORM_SBIN_DIR%
-  call %JAVA% %JAVA_HEAP_MAX% %STORM_OPTS% %STORM_LOG_FILE% %CLASS% %storm-command-arguments%
+  set java_arguments=%JAVA_HEAP_MAX% %STORM_OPTS% %STORM_LOG_FILE% -classpath %CLASSPATH% %CLASS% %storm-command-arguments%
+  if defined service_entry (
+    call :makeServiceXml %java_arguments%
+  ) else (
+    call %JAVA% %java_arguments%
+  )
   goto :eof
 
 
@@ -155,6 +169,17 @@
 
 :version
   type RELEASE
+  goto :eof
+
+:makeServiceXml
+  set arguments=%*
+  @echo ^<service^>
+  @echo   ^<id^>%storm-command%^</id^>
+  @echo   ^<name^>%storm-command%^</name^>
+  @echo   ^<description^>This service runs Storm %storm-command%^</description^>
+  @echo   ^<executable^>%JAVA%^</executable^>
+  @echo   ^<arguments^>%arguments%^</arguments^>
+  @echo ^</service^>
   goto :eof
 
 :make_command_arguments
