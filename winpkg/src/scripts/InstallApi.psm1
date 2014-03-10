@@ -1,4 +1,4 @@
-﻿### Licensed to the Apache Software Foundation (ASF) under one or more
+### Licensed to the Apache Software Foundation (ASF) under one or more
 ### contributor license agreements.  See the NOTICE file distributed with
 ### this work for additional information regarding copyright ownership.
 ### The ASF licenses this file to You under the Apache License, Version 2.0
@@ -125,11 +125,17 @@ function Install(
 		Write-Log "Node storm Role Services: $roles"
 
 		### Verify that roles are in the supported set	
-		CheckRole $roles @("supervisor" "nimbus")
+		CheckRole $roles @("supervisor" "nimbus" "ui")
 		Write-Log "Role : $roles"
 		foreach( $service in empty-null ($roles -Split('\s+')))
 		{
 			CreateAndConfigureHadoopService $service $HDP_RESOURCES_DIR $stormInstallToBin $serviceCredential
+			###
+            ### Setup Storm service config
+            ###
+            Write-Log "Creating service config ${stormInstallToBin}\$service.xml"
+            $cmd = "$stormInstallToBin\storm.cmd --service $service > `"$stormInstallToBin\$service.xml`""
+            Invoke-CmdChk $cmd
 		}
 	  
  	     ### end of roles loop
@@ -224,7 +230,7 @@ function StartService(
     if ( $component -eq "storm" )
     {
         Write-Log "StartService: storm services"
-		CheckRole $roles @("supervisor" "nimbus")
+		CheckRole $roles @("supervisor" "nimbus" "ui")
 
         foreach ( $role in $roles -Split("\s+") )
         {
@@ -261,7 +267,7 @@ function StopService(
     if ( $component -eq "storm" )
     {
         ### Verify that roles are in the supported set
-        CheckRole $roles @("supervisor" "nimbus")
+        CheckRole $roles @("supervisor" "nimbus" "ui")
         foreach ( $role in $roles -Split("\s+") )
         {
             try

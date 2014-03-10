@@ -81,10 +81,14 @@ function Main( $scriptDir )
     ###
     ### Install and Configure storm
     ###
-    if ( $ENV:IS_storm -eq "yes" ) {
-      $roles = "supervisor nimbus"
+    if ( $ENV:IS_STORM_NIMBUS -eq "yes" ) {
+      $roles = "nimbus ui"
     }
-	
+    
+    if ( $ENV:IS_STORM_SUPERVISOR -eq "yes" ) {
+      $roles = $roles+" "+"supervisor"
+    }
+
     Write-Log "Roles are $roles"
     Install "storm" $nodeInstallRoot $serviceCredential $roles
 
