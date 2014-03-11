@@ -73,6 +73,12 @@ public class HBaseBolt  extends BaseRichBolt {
         this.collector = collector;
         final Configuration hbConfig = HBaseConfiguration.create();
         final String tableName = this.tableName;
+        String hbRoot = (String)map.get("hbase.rootdir");
+        if(hbRoot != null){
+            LOG.info("Using hbase.rootdir={}", hbRoot);
+            hbConfig.set("hbase.rootdir", hbRoot);
+        }
+
         try{
             UserProvider provider = HBaseSecurityUtil.login(map, hbConfig);
             this.table = provider.getCurrent().getUGI().doAs(new PrivilegedExceptionAction<HTable>() {
@@ -115,9 +121,11 @@ public class HBaseBolt  extends BaseRichBolt {
             } catch(RetriesExhaustedWithDetailsException e){
                 LOG.warn("Failing tuple. Error writing column.", e);
                 this.collector.fail(tuple);
+                return;
             } catch (InterruptedIOException e) {
                 LOG.warn("Failing tuple. Error writing column.", e);
                 this.collector.fail(tuple);
+                return;
             }
         }
         if(cols.hasCounters()){
@@ -136,8 +144,10 @@ public class HBaseBolt  extends BaseRichBolt {
             } catch (IOException e) {
                 LOG.warn("Failing tuple. Error incrementing counter.", e);
                 this.collector.fail(tuple);
+                return;
             }
         }
+        this.collector.ack(tuple);
 
     }
 
