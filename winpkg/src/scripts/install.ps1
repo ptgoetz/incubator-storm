@@ -82,13 +82,16 @@ function Main( $scriptDir )
     ### Install and Configure storm
     ###
     if ( $ENV:IS_STORM_NIMBUS -eq "yes" ) {
-      $roles = "nimbus ui"
-    }
-    
-    if ( $ENV:IS_STORM_SUPERVISOR -eq "yes" ) {
-      $roles = $roles+" "+"supervisor" "+"logviewer"
+      $roles = "nimbus"
+      $roles = $roles+" "+"ui"
     }
 
+    if ( $ENV:IS_STORM_SUPERVISOR -eq "yes" ) {
+      $roles = $roles+" "+"supervisor"
+      $roles = $roles+" "+"logviewer"
+    }
+
+    $roles = $roles.Trim()
     Write-Log "Roles are $roles"
     Install "storm" $nodeInstallRoot $serviceCredential $roles
 
