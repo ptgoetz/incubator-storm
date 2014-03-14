@@ -34,6 +34,7 @@
 @rem   STORM_ROOT_LOGGER The root appender. Default is INFO,console
 @rem
 setlocal enabledelayedexpansion
+set script_path=%~dp0
 
 @rem if running as a service, log to (daily rolling) files instead of console
 if "%1" == "--service" (
@@ -46,7 +47,7 @@ if "%1" == "--service" (
 
 :main
 
-  call %~dp0storm-config.cmd
+  call %script_path%storm-config.cmd
 
   set storm-command=%1
   if not defined storm-command (
