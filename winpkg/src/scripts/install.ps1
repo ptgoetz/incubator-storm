@@ -86,7 +86,7 @@ function Main( $scriptDir )
     }
     
     if ( $ENV:IS_STORM_SUPERVISOR -eq "yes" ) {
-      $roles = $roles+" "+"supervisor"
+      $roles = $roles+" "+"supervisor" "+"logviewer"
     }
 
     Write-Log "Roles are $roles"
