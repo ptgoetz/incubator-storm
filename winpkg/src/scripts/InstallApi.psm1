@@ -125,7 +125,7 @@ function Install(
 		Write-Log "Node storm Role Services: $roles"
 
 		### Verify that roles are in the supported set	
-		CheckRole $roles @("supervisor" "nimbus" "ui")
+		CheckRole $roles @("supervisor", "nimbus", "ui", "logviewer")
 		Write-Log "Role : $roles"
 		foreach( $service in empty-null ($roles -Split('\s+')))
 		{
@@ -230,7 +230,7 @@ function StartService(
     if ( $component -eq "storm" )
     {
         Write-Log "StartService: storm services"
-		CheckRole $roles @("supervisor" "nimbus" "ui")
+		CheckRole $roles @("supervisor", "nimbus", "ui", "logviewer")
 
         foreach ( $role in $roles -Split("\s+") )
         {
@@ -267,7 +267,7 @@ function StopService(
     if ( $component -eq "storm" )
     {
         ### Verify that roles are in the supported set
-        CheckRole $roles @("supervisor" "nimbus" "ui")
+        CheckRole $roles @("supervisor", "nimbus", "ui", "logviewer")
         foreach ( $role in $roles -Split("\s+") )
         {
             try

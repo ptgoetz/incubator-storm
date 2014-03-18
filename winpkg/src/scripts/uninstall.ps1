@@ -21,7 +21,7 @@ function Main( $scriptDir )
     ### Stop and delete services
     ###
     
-    foreach( $service in ("supervisor", "nimbus"))
+    foreach( $service in ("supervisor", "nimbus", "ui", "logviewer"))
     {
         Write-Log "Stopping $service"
         $s = Get-Service $service -ErrorAction SilentlyContinue
