@@ -130,6 +130,8 @@ function Install(
 		foreach( $service in empty-null ($roles -Split('\s+')))
 		{
 			CreateAndConfigureHadoopService $service $HDP_RESOURCES_DIR $stormInstallToBin $serviceCredential
+            $cmd="$ENV:WINDIR\system32\sc.exe config $service start= demand"
+            Invoke-CmdChk $cmd
 			###
             ### Setup Storm service config
             ###
