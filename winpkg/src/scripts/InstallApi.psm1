@@ -130,6 +130,8 @@ function Install(
 		foreach( $service in empty-null ($roles -Split('\s+')))
 		{
 			CreateAndConfigureHadoopService $service $HDP_RESOURCES_DIR $stormInstallToBin $serviceCredential
+            $cmd="$ENV:WINDIR\system32\sc.exe config $service start= demand"
+            Invoke-CmdChk $cmd
 			###
             ### Setup Storm service config
             ###
@@ -328,7 +330,28 @@ function Configure(
     
     if ( $component -eq "storm" )
     {
-        Write-Log "Configure: storm does not have any configurations"
+        Write-Log "Configuring storm"
+        Write-Log "Changing storm.yaml"
+        $yaml_file = "$ENV:STORM_HOME\conf\storm.yaml"
+        $content = Get-Content $yaml_file
+        $content+=@("storm.zookeeper.servers:")
+        $zookeeper_hosts = ($ENV:ZOOKEEPER_HOSTS.Split(",") | foreach { $_.Trim() })
+        foreach ($shost in $zookeeper_hosts)
+        {
+            $content+= ('- "'+$shost+'"')
+        }
+        $content+= @(('nimbus.host: "'+$ENV:STORM_NIMBUS+'"'),
+        ('storm.local.dir: "'+$ENV:STORM_HOME+'"'),
+        "logviewer.port: 8081",
+        "storm.messaging.transport:",
+        '"backtype.storm.messaging.netty.Context"',
+        "storm.messaging.netty.buffer_size: 16384",
+        "storm.messaging.netty.max_retries: 10",
+        "storm.messaging.netty.min_wait_ms: 1000",
+        "storm.messaging.netty.max_wait_ms: 5000",
+        "ui.port: 8772")
+        Set-Content -Value $content -Path $yaml_file -Force
+        Write-Log "Configuration of storm is finished"
     }
     else
     {
@@ -429,7 +452,9 @@ function CreateAndConfigureHadoopService(
     }
     else
     {
-        Write-Log "Service `"$service`" already exists, skipping service creation"
+        Write-Log "Service `"$service`" already exists, Removing `"$service`""
+        StopAndDeleteHadoopService $service
+        CreateAndConfigureHadoopService $service $hdpResourcesDir $serviceBinDir $serviceCredential
     }
 }
 

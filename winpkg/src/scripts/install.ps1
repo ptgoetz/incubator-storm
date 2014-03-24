@@ -94,7 +94,7 @@ function Main( $scriptDir )
     $roles = $roles.Trim()
     Write-Log "Roles are $roles"
     Install "storm" $nodeInstallRoot $serviceCredential $roles
-
+    Configure "storm" $nodeInstallRoot
     Write-Log "Installation of storm completed successfully"
 }
 
