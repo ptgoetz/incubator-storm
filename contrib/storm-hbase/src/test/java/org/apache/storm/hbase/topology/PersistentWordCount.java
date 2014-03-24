@@ -58,11 +58,17 @@ public class PersistentWordCount {
         builder.setBolt(HBASE_BOLT, hbase, 1).fieldsGrouping(COUNT_BOLT, new Fields("word"));
 
 
-        LocalCluster cluster = new LocalCluster();
-        cluster.submitTopology("test", config, builder.createTopology());
-        Thread.sleep(10000);
-        cluster.killTopology("test");
-        cluster.shutdown();
-        System.exit(0);
+        if (args.length == 1) {
+            LocalCluster cluster = new LocalCluster();
+            cluster.submitTopology("test", config, builder.createTopology());
+            Thread.sleep(30000);
+            cluster.killTopology("test");
+            cluster.shutdown();
+            System.exit(0);
+        } else if (args.length == 2) {
+            StormSubmitter.submitTopology(args[1], config, builder.createTopology());
+        } else{
+            System.out.println("Usage: PersistentWordCount <hbase.rootdir> [topology name]");
+        }
     }
 }
