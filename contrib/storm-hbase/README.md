@@ -34,6 +34,18 @@ ColumnList cols = new ColumnList();
 cols.addCounter(this.columnFamily, field.getBytes(), toLong(tuple.getValueByField(field)));
 ```
 
+When the remote HBase is security enabled, a kerberos keytab and the corresponding principal name need to be
+provided for the storm-hdfs connector. Specifically, the Config object passed into the topology should contain
+{(“storm.keytab.file”, “$keytab”), ("storm.kerberos.principal", “$principal”)}. Example:
+
+```java
+Config config = new Config();
+...
+config.put(“storm.keytab.file”, “$keytab”);
+config.put("storm.kerberos.principal", “$principle”);
+StormSubmitter.submitTopology(“$topologyName”, config, builder.createTopology());
+```
+
 ### SimpleHBaseMapper
 `storm-hdfs` includes a general purpose `HBaseMapper` implementation called `SimpleHBaseMapper` that can map Storm
 tuples to both regular HBase columns as well as counter columns.

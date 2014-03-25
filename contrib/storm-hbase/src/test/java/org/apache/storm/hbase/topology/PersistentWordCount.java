@@ -17,13 +17,15 @@
  */
 package org.apache.storm.hbase.topology;
 
+import org.apache.storm.hbase.bolt.HBaseBolt;
+import org.apache.storm.hbase.bolt.mapper.SimpleHBaseMapper;
+import org.apache.storm.hbase.security.HBaseSecurityUtil;
+
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
-import org.apache.storm.hbase.bolt.HBaseBolt;
-import org.apache.storm.hbase.bolt.mapper.SimpleHBaseMapper;
 
 
 public class PersistentWordCount {
@@ -67,8 +69,15 @@ public class PersistentWordCount {
             System.exit(0);
         } else if (args.length == 2) {
             StormSubmitter.submitTopology(args[1], config, builder.createTopology());
-        } else{
-            System.out.println("Usage: PersistentWordCount <hbase.rootdir> [topology name]");
+        } else if (args.length == 4) {
+            System.out.println("hdfs url: " + args[0] + ", keytab file: " + args[2] + 
+                ", principal name: " + args[3] + ", toplogy name: " + args[1]);
+            config.put(HBaseSecurityUtil.STORM_KEYTAB_FILE_KEY, args[2]);
+            config.put(HBaseSecurityUtil.STORM_USER_NAME_KEY, args[3]);
+            config.setNumWorkers(3);
+            StormSubmitter.submitTopology(args[1], config, builder.createTopology());
+        } else {
+            System.out.println("Usage: PersistentWordCount <hbase.rootdir> [topology name] [keytab file] [principal name]");
         }
     }
 }

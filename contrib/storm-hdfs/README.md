@@ -30,6 +30,18 @@ HdfsBolt bolt = new HdfsBolt()
         .withSyncPolicy(syncPolicy);
 ```
 
+When the remote HDFS file system is security enabled, a kerberos keytab and the corresponding principal name need to be
+provided for the storm-hdfs connector. Specifically, the Config object passed into the topology should contain
+{(“storm.keytab.file”, “$keytab”), ("storm.kerberos.principal", “$principal”)}. Example:
+
+```java
+Config config = new Config();
+...
+config.put(“storm.keytab.file”, “$keytab”);
+config.put("storm.kerberos.principal", “$principle”);
+StormSubmitter.submitTopology(“$topologyName”, config, builder.createTopology());
+```
+
 ### Packaging a Topology
 When packaging your topology, it's important that you use the [maven-shade-plugin]() as opposed to the
 [maven-assempbly-plugin]().

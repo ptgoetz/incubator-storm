@@ -6,10 +6,13 @@ import backtype.storm.StormSubmitter;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
+
+import org.apache.storm.hdfs.bolt.HdfsBolt;
 import org.apache.storm.hdfs.common.rotation.MoveFileAction;
 import org.apache.storm.hdfs.trident.format.*;
 import org.apache.storm.hdfs.trident.rotation.FileRotationPolicy;
 import org.apache.storm.hdfs.trident.rotation.FileSizeRotationPolicy;
+
 import storm.trident.Stream;
 import storm.trident.TridentState;
 import storm.trident.TridentTopology;
@@ -62,12 +65,18 @@ public class TridentFileTopology {
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology("wordCounter", conf, buildTopology(args[0]));
             Thread.sleep(120 * 1000);
-        }
-        else if(args.length == 2) {
+        } else if(args.length == 2) {
             conf.setNumWorkers(3);
             StormSubmitter.submitTopology(args[1], conf, buildTopology(args[0]));
-        } else{
-            System.out.println("Usage: TridentFileTopology <hdfs url> [topology name]");
+        } else if (args.length == 4) {
+            System.out.println("hdfs url: " + args[0] + ", keytab file: " + args[2] + 
+                ", principal name: " + args[3] + ", toplogy name: " + args[1]);
+            conf.put(HdfsBolt.STORM_KEYTAB_FILE_KEY, args[2]);
+            conf.put(HdfsBolt.STORM_USER_NAME_KEY, args[3]);
+            conf.setNumWorkers(3);
+            StormSubmitter.submitTopology(args[1], conf, buildTopology(args[0]));
+        } else {
+            System.out.println("Usage: TridentFileTopology <hdfs url> [topology name] [keytab file] [principal name]");
         }
     }
 }
