@@ -41,9 +41,9 @@ provided for the storm-hdfs connector. Specifically, the Config object passed in
 ```java
 Config config = new Config();
 ...
-config.put(“storm.keytab.file”, “$keytab”);
-config.put("storm.kerberos.principal", “$principle”);
-StormSubmitter.submitTopology(“$topologyName”, config, builder.createTopology());
+config.put("storm.keytab.file", "$keytab");
+config.put("storm.kerberos.principal", "$principle");
+StormSubmitter.submitTopology("$topologyName", config, builder.createTopology());
 ```
 
 ### SimpleHBaseMapper
