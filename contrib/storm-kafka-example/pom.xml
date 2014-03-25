@@ -12,19 +12,18 @@
 
 
     <groupId>org.apache.storm.kafka</groupId>
-    <version>1.0-SNAPSHOT</version>
     <artifactId>storm-kafka-example</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.storm</groupId>
             <artifactId>storm-kafka</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.storm</groupId>
             <artifactId>storm-core</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
             <!--<scope>provided</scope>-->
         </dependency>
     </dependencies>
