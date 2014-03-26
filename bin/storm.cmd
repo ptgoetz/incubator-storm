@@ -189,20 +189,25 @@ if "%1" == "--service" (
   goto :eof
 
 :make_command_arguments
-  if "%2" == "" goto :eof
-  set _count=0
-  set _shift=1
-  for %%i in (%*) do (
-    set /a _count=!_count!+1
-    if !_count! GTR %_shift% ( 
-	if not defined _arguments (
-	  set _arguments=%%i
-	) else (
-          set _arguments=!_arguments! %%i
-	)
-    )
+  if [%2] == [] goto :eof
+  if "%1" == "--service" (
+    shift
   )
-  set storm-command-arguments=%_arguments%
+  shift
+  set _stormarguments=
+
+  :MakeCmdArgsLoop 
+  if [%1]==[] goto :EndLoop 
+
+  if not defined _stormarguments (
+    set _stormarguments=%1
+  ) else (
+    set _stormarguments=!_stormarguments! %1
+  )
+  shift
+  goto :MakeCmdArgsLoop 
+  :EndLoop
+  set storm-command-arguments=%_stormarguments%
   goto :eof
 
 :print_usage
