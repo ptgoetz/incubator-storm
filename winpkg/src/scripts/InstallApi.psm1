@@ -185,7 +185,7 @@ function Uninstall(
 		
         ### Stop and delete services
         ###
-        foreach( $service in ("supervisor nimbus"))
+        foreach( $service in ("supervisor", "nimbus", "ui", "logviewer"))
         {
             StopAndDeleteHadoopService $service
         }
