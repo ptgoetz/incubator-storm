@@ -30,6 +30,7 @@ import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+
 import org.apache.storm.hdfs.bolt.format.DefaultFileNameFormat;
 import org.apache.storm.hdfs.bolt.format.DelimitedRecordFormat;
 import org.apache.storm.hdfs.bolt.format.FileNameFormat;
@@ -40,6 +41,7 @@ import org.apache.storm.hdfs.bolt.rotation.FileSizeRotationPolicy.Units;
 import org.apache.storm.hdfs.bolt.sync.CountSyncPolicy;
 import org.apache.storm.hdfs.bolt.sync.SyncPolicy;
 import org.apache.storm.hdfs.common.rotation.MoveFileAction;
+import org.apache.storm.hdfs.common.security.HdfsSecurityUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -100,8 +102,8 @@ public class HdfsFileTopology {
         } else if (args.length == 4) {
             System.out.println("hdfs url: " + args[0] + ", keytab file: " + args[2] + 
                 ", principal name: " + args[3] + ", toplogy name: " + args[1]);
-            config.put(HdfsBolt.STORM_KEYTAB_FILE_KEY, args[2]);
-            config.put(HdfsBolt.STORM_USER_NAME_KEY, args[3]);
+            config.put(HdfsSecurityUtil.STORM_KEYTAB_FILE_KEY, args[2]);
+            config.put(HdfsSecurityUtil.STORM_USER_NAME_KEY, args[3]);
             StormSubmitter.submitTopology(args[1], config, builder.createTopology());
         } else {
             System.out.println("Usage: HdfsFileTopology <hdfs url> [topology name] [keytab file] [principal name]");

@@ -24,13 +24,12 @@ import java.util.Map;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.SecurityUtil;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.storm.hdfs.bolt.format.FileNameFormat;
 import org.apache.storm.hdfs.bolt.format.RecordFormat;
 import org.apache.storm.hdfs.bolt.rotation.FileRotationPolicy;
 import org.apache.storm.hdfs.bolt.sync.SyncPolicy;
 import org.apache.storm.hdfs.common.rotation.RotationAction;
+import org.apache.storm.hdfs.common.security.HdfsSecurityUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,9 +39,6 @@ import backtype.storm.tuple.Tuple;
 
 public class HdfsBolt extends AbstractHdfsBolt{
     private static final Logger LOG = LoggerFactory.getLogger(HdfsBolt.class);
-
-    public static final String STORM_KEYTAB_FILE_KEY = "storm.keytab.file";
-    public static final String STORM_USER_NAME_KEY = "storm.kerberos.principal";
 
     private FSDataOutputStream out;
     private RecordFormat format;
@@ -81,10 +77,7 @@ public class HdfsBolt extends AbstractHdfsBolt{
     @Override
     public void doPrepare(Map conf, TopologyContext topologyContext, OutputCollector collector) throws IOException {
         LOG.info("Preparing HDFS Bolt...");
-        if (UserGroupInformation.isSecurityEnabled()) {
-            SecurityUtil.login(hdfsConfig, STORM_KEYTAB_FILE_KEY,
-                STORM_USER_NAME_KEY);
-        }
+        HdfsSecurityUtil.login(conf, hdfsConfig);
         this.fs = FileSystem.get(URI.create(this.fsUrl), hdfsConfig);
     }
 

@@ -38,6 +38,7 @@ import org.apache.storm.hdfs.bolt.rotation.FileSizeRotationPolicy.Units;
 import org.apache.storm.hdfs.bolt.sync.CountSyncPolicy;
 import org.apache.storm.hdfs.bolt.sync.SyncPolicy;
 import org.apache.storm.hdfs.common.rotation.MoveFileAction;
+import org.apache.storm.hdfs.common.security.HdfsSecurityUtil;
 import org.apache.hadoop.io.SequenceFile;
 
 import java.util.HashMap;
@@ -103,8 +104,8 @@ public class SequenceFileTopology {
         } else if (args.length == 4) {
             System.out.println("hdfs url: " + args[0] + ", keytab file: " + args[2] + 
                 ", principal name: " + args[3] + ", toplogy name: " + args[1]);
-            config.put(HdfsBolt.STORM_KEYTAB_FILE_KEY, args[2]);
-            config.put(HdfsBolt.STORM_USER_NAME_KEY, args[3]);
+            config.put(HdfsSecurityUtil.STORM_KEYTAB_FILE_KEY, args[2]);
+            config.put(HdfsSecurityUtil.STORM_USER_NAME_KEY, args[3]);
             StormSubmitter.submitTopology(args[1], config, builder.createTopology());
         } else {
             System.out.println("Usage: SequenceFileTopology <hdfs url> [topology name] [keytab file] [principal name]");

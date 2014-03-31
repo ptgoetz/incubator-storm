@@ -9,6 +9,7 @@ import backtype.storm.tuple.Values;
 
 import org.apache.storm.hdfs.bolt.HdfsBolt;
 import org.apache.storm.hdfs.common.rotation.MoveFileAction;
+import org.apache.storm.hdfs.common.security.HdfsSecurityUtil;
 import org.apache.storm.hdfs.trident.format.*;
 import org.apache.storm.hdfs.trident.rotation.FileRotationPolicy;
 import org.apache.storm.hdfs.trident.rotation.FileSizeRotationPolicy;
@@ -69,8 +70,8 @@ public class TridentSequenceTopology {
         } else if (args.length == 4) {
             System.out.println("hdfs url: " + args[0] + ", keytab file: " + args[2] + 
                 ", principal name: " + args[3] + ", toplogy name: " + args[1]);
-            conf.put(HdfsBolt.STORM_KEYTAB_FILE_KEY, args[2]);
-            conf.put(HdfsBolt.STORM_USER_NAME_KEY, args[3]);
+            conf.put(HdfsSecurityUtil.STORM_KEYTAB_FILE_KEY, args[2]);
+            conf.put(HdfsSecurityUtil.STORM_USER_NAME_KEY, args[3]);
             conf.setNumWorkers(3);
             StormSubmitter.submitTopology(args[1], conf, buildTopology(args[0]));
         } else {
