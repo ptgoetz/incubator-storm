@@ -332,6 +332,8 @@ function Configure(
     {
         Write-Log "Configuring storm"
         Write-Log "Changing storm.yaml"
+        $ENV:STORM_NIMBUS_LOCAL_DIR = $ENV:STORM_HOME.Replace('\\', '\')
+        $ENV:STORM_NIMBUS_LOCAL_DIR = $ENV:STORM_NIMBUS_LOCAL_DIR.Replace('\', '\\')
         $yaml_file = "$ENV:STORM_HOME\conf\storm.yaml"
         $content = Get-Content $yaml_file
         $content+=@("storm.zookeeper.servers:")
@@ -341,7 +343,7 @@ function Configure(
             $content+= ('- "'+$shost+'"')
         }
         $content+= @(('nimbus.host: "'+$ENV:STORM_NIMBUS+'"'),
-        ('storm.local.dir: "'+$ENV:STORM_HOME+'"'),
+        ('storm.local.dir: "'+$ENV:STORM_NIMBUS_LOCAL_DIR+'"'),
         "logviewer.port: 8081",
         "storm.messaging.transport: backtype.storm.messaging.netty.Context",
         "storm.messaging.netty.buffer_size: 16384",
