@@ -343,7 +343,7 @@ function Configure(
             $content+= ('- "'+$shost+'"')
         }
         $content+= @(('nimbus.host: "'+$ENV:STORM_NIMBUS+'"'),
-        ('storm.local.dir: "'+$ENV:STORM_NIMBUS_LOCAL_DIR+'"'),
+        ('storm.local.dir: "'+$ENV:HDP_DATA_DIR+'"'),
         "logviewer.port: 8081",
         "storm.messaging.transport: backtype.storm.messaging.netty.Context",
         "storm.messaging.netty.buffer_size: 16384",
