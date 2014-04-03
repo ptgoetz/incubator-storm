@@ -65,7 +65,7 @@ if "%1" == "--service" (
     goto :eof
   )
 
-  set corecommands=activate deactivate dev-zookeeper drpc kill list logviewer nimbus rebalance repl shell supervisor ui
+  set corecommands=activate deactivate dev-zookeeper drpc kill list logviewer nimbus rebalance remoteconfvalue repl shell supervisor ui
   for %%i in ( %corecommands% ) do (
     if %storm-command% == %%i set corecommand=true  
   )
@@ -152,6 +152,11 @@ if "%1" == "--service" (
   set STORM_OPTS=%STORM_CLIENT_OPTS% %STORM_OPTS%
   goto :eof
 
+:remoteconfvalue
+  set CLASS=backtype.storm.command.config_value
+  set STORM_OPTS=%STORM_CLIENT_OPTS% %STORM_OPTS%
+  goto :eof
+
 :repl
   set CLASS=clojure.main
   set STORM_OPTS=%STORM_CLIENT_OPTS% %STORM_OPTS%
@@ -219,12 +224,13 @@ if "%1" == "--service" (
   @echo   dev-zookeeper        launches a fresh dev/test Zookeeper server
   @echo   drpc                 launches a DRPC daemon
   @echo   help
-  @echo   jar ^<jar^>            run a jar file
+  @echo   jar ^<jar^>          run a jar file
   @echo   kill                 kills the topology with the name topology-name
   @echo   list                 list the running topologies and their statuses
   @echo   logviewer            launches the log viewer daemon
   @echo   nimbus               launches the nimbus daemon
   @echo   rebalance            redistribute or change the parallelism of a running topology
+  @echo   remoteconfvalue      prints value for conf-name from cluster config ../conf/storm.yaml merged with defaults.yaml
   @echo   repl                 opens up a Clojure REPL
   @echo   shell                storm shell
   @echo   supervisor           launches the supervisor daemon
