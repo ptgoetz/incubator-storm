@@ -94,6 +94,10 @@ if not defined STORM_LOGBACK_CONFIGURATION_FILE (
   set STORM_LOGBACK_CONFIGURATION_FILE=%STORM_CONF_DIR%\logback.xml
 )
 
+if not defined STORM_LOGBACK_CLUSTER_CONF_FILE (
+  set STORM_LOGBACK_CLUSTER_CONF_FILE=-Dlogback.configurationFile=%STORM_HOME%\logback\cluster.xml
+)
+
 set STORM_OPTS=-Dstorm.home=%STORM_HOME% -Djava.library.path=sbin
 set STORM_OPTS=%STORM_OPTS% -Dlogback.configurationFile=%STORM_LOGBACK_CONFIGURATION_FILE%
 set STORM_OPTS=%STORM_OPTS% -Dstorm.log.dir=%STORM_LOG_DIR%

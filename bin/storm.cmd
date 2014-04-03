@@ -56,6 +56,9 @@ if "%1" == "--service" (
 
   call :make_command_arguments %*
 
+  if not defined STORM_LOG_FILE (
+    set STORM_LOG_FILE=-Dlogfile.name=%storm-command%.log
+  )
   set shellcommands=classpath help version
   for %%i in ( %shellcommands% ) do (
     if %storm-command% == %%i set shellcommand=true
@@ -120,7 +123,7 @@ if "%1" == "--service" (
 
 :drpc
   set CLASS=backtype.storm.daemon.drpc
-  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS%
+  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS% %STORM_LOG_FILE% %STORM_LOGBACK_CLUSTER_CONF_FILE%
   goto :eof
 
 :help
@@ -139,12 +142,12 @@ if "%1" == "--service" (
 
 :logviewer
   set CLASS=backtype.storm.daemon.logviewer
-  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS%
+  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS% %STORM_LOG_FILE% %STORM_LOGBACK_CLUSTER_CONF_FILE%
   goto :eof
 
 :nimbus
   set CLASS=backtype.storm.daemon.nimbus
-  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS%
+  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS% %STORM_LOG_FILE% %STORM_LOGBACK_CLUSTER_CONF_FILE%
   goto :eof
 
 :rebalance
@@ -169,13 +172,13 @@ if "%1" == "--service" (
   
 :supervisor
   set CLASS=backtype.storm.daemon.supervisor
-  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS%
+  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS% %STORM_LOG_FILE% %STORM_LOGBACK_CLUSTER_CONF_FILE%
   goto :eof
 
 :ui
   set CLASS=backtype.storm.ui.core
   set CLASSPATH=%CLASSPATH%;%STORM_HOME%
-  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS%
+  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS% %STORM_LOG_FILE% %STORM_LOGBACK_CLUSTER_CONF_FILE%
   goto :eof
 
 :version
