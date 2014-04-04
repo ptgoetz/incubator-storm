@@ -20,6 +20,7 @@ package org.apache.storm.hdfs.bolt;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.tuple.Tuple;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
@@ -29,6 +30,7 @@ import org.apache.storm.hdfs.bolt.format.SequenceFormat;
 import org.apache.storm.hdfs.bolt.rotation.FileRotationPolicy;
 import org.apache.storm.hdfs.bolt.sync.SyncPolicy;
 import org.apache.storm.hdfs.common.rotation.RotationAction;
+import org.apache.storm.hdfs.common.security.HdfsSecurityUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,6 +96,7 @@ public class SequenceFileBolt extends AbstractHdfsBolt {
         LOG.info("Preparing Sequence File Bolt...");
         if (this.format == null) throw new IllegalStateException("SequenceFormat must be specified.");
 
+        HdfsSecurityUtil.login(conf, hdfsConfig);
         this.fs = FileSystem.get(URI.create(this.fsUrl), hdfsConfig);
         this.codecFactory = new CompressionCodecFactory(hdfsConfig);
     }
