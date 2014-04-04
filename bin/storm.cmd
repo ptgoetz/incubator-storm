@@ -85,10 +85,6 @@ if "%1" == "--service" (
     set storm-command-arguments=%4 %5 %6 %7 %8 %9
   )
   
-  if not defined STORM_LOG_FILE (
-    set STORM_LOG_FILE=-Dlogfile.name=%storm-command%.log
-  )
-
   if defined STORM_DEBUG ( 
     %JAVA% %JAVA_HEAP_MAX% %STORM_OPTS% %STORM_LOG_FILE% %CLASS% %storm-command-arguments%
   )
