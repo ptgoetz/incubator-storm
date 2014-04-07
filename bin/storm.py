@@ -39,6 +39,11 @@ else:
 
 STORM_DIR = os.getenv('STORM_BASE_DIR', None)
 CLUSTER_CONF_DIR = os.getenv('STORM_CONF_DIR', None)
+STORM_LOG_DIR = os.getenv('STORM_LOG_DIR', None) 
+
+if (STORM_LOG_DIR == None):
+    STORM_LOG_DIR = STORM_DIR+"/logs"
+
 USER_CONF_DIR = os.path.expanduser("~/.storm")
 if (not os.path.isfile(USER_CONF_DIR + "/storm.yaml")):
     USER_CONF_DIR = CLUSTER_CONF_DIR
@@ -132,6 +137,7 @@ def exec_storm_class(klass, jvmtype="-server", jvmopts=[], extrajars=[], args=[]
     all_args = [
         "java", jvmtype, get_config_opts(),
         "-Dstorm.home=" + STORM_DIR, 
+        "-Dstorm.log.dir=" + STORM_LOG_DIR,
         "-Djava.library.path=" + confvalue("java.library.path", extrajars),
         "-Dstorm.conf.file=" + CONFFILE,
         "-cp", get_classpath(extrajars),
