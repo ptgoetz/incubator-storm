@@ -352,6 +352,21 @@ function Configure(
         "storm.messaging.netty.max_wait_ms: 5000",
         "ui.port: 8772")
         Set-Content -Value $content -Path $yaml_file -Force
+
+        ###
+        ### ACL Storm logs directory such that machine users can write to it
+        ###
+        if(Test-Path ENV:STORM_LOG_DIR)
+        {
+            $stormlogdir = $ENV:STORM_LOG_DIR
+        }
+        if( -not (Test-Path "$stormlogdir"))
+        {
+            Write-Log "Creating Storm logs folder"
+            $cmd = "mkdir `"$stormlogdir`""
+            Invoke-CmdChk $cmd
+        }
+        GiveFullPermissions "$stormlogdir" "Users"
         Write-Log "Configuration of storm is finished"
     }
     else
