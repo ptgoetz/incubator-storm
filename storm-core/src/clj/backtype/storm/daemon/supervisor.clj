@@ -443,6 +443,7 @@
     :distributed [supervisor storm-id port worker-id]
     (let [conf (:conf supervisor)
           storm-home (System/getProperty "storm.home")
+          storm-log-dir (System/getProperty "storm.log.dir")
           stormroot (supervisor-stormdist-root conf storm-id)
           stormjar (supervisor-stormjar-path stormroot)
           storm-conf (read-supervisor-storm-conf conf storm-id)
@@ -455,6 +456,7 @@
                        " -Djava.library.path=" (conf JAVA-LIBRARY-PATH)
                        " -Dlogfile.name=" logfilename
                        " -Dstorm.home=" storm-home
+                       " -Dstorm.log.dir=" storm-log-dir
                        " -Dlogback.configurationFile=" storm-home "/logback/cluster.xml"
                        " -Dstorm.id=" storm-id
                        " -Dworker.id=" worker-id
