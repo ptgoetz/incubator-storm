@@ -17,13 +17,14 @@
  */
 package org.apache.storm.hdfs.bolt;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.Map;
-
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.tuple.Tuple;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
+import org.apache.hadoop.hdfs.client.HdfsDataOutputStream.SyncFlag;
 import org.apache.storm.hdfs.bolt.format.FileNameFormat;
 import org.apache.storm.hdfs.bolt.format.RecordFormat;
 import org.apache.storm.hdfs.bolt.rotation.FileRotationPolicy;
@@ -33,9 +34,10 @@ import org.apache.storm.hdfs.common.security.HdfsSecurityUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import backtype.storm.task.OutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.tuple.Tuple;
+import java.io.IOException;
+import java.net.URI;
+import java.util.EnumSet;
+import java.util.Map;
 
 public class HdfsBolt extends AbstractHdfsBolt{
     private static final Logger LOG = LoggerFactory.getLogger(HdfsBolt.class);
@@ -91,7 +93,11 @@ public class HdfsBolt extends AbstractHdfsBolt{
             this.collector.ack(tuple);
 
             if(this.syncPolicy.mark(tuple, this.offset)){
-                this.out.hsync();
+                if(this.out instanceof HdfsDataOutputStream){
+                    ((HdfsDataOutputStream)this.out).hsync(EnumSet.of(SyncFlag.UPDATE_LENGTH));
+                } else {
+                    this.out.hsync();
+                }
                 this.syncPolicy.reset();
             }
             if(this.rotationPolicy.mark(tuple, this.offset)){
