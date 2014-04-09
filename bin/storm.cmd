@@ -178,7 +178,7 @@ if "%1" == "--service" (
   goto :eof
 
 :version
-  type RELEASE
+  type %STORM_HOME%\RELEASE
   goto :eof
 
 :makeServiceXml
