@@ -18,7 +18,7 @@
   (:use [hiccup core page-helpers])
   (:use [clojure [string :only [blank? join]]])
   (:use [backtype.storm config log])
-  (:use [backtype.storm.util :only [uuid defnk]])
+  (:use [backtype.storm.util :only [uuid defnk url-encode]])
   (:use [clj-time coerce format])
   (:import [backtype.storm.generated ExecutorInfo ExecutorSummary])
   (:import [org.mortbay.jetty.security SslSocketConnector])
@@ -133,7 +133,7 @@ $(\"table#%s\").each(function(i) { $(this).tablesorter({ sortList: %s, headers: 
 
 (defn url-format [fmt & args]
   (String/format fmt 
-    (to-array (map #(java.net.URLEncoder/encode (str %)) args))))
+    (to-array (map #(url-encode (str %)) args))))
 
 (defn to-tasks [^ExecutorInfo e]
   (let [start (.get_task_start e)

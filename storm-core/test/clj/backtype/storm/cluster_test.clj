@@ -19,7 +19,7 @@
   (:import [org.apache.zookeeper ZooDefs ZooDefs$Ids])
   (:import [org.mockito Mockito])
   (:import [org.mockito.exceptions.base MockitoAssertionError])
-  (:import [com.netflix.curator.framework CuratorFramework CuratorFrameworkFactory CuratorFrameworkFactory$Builder])
+  (:import [org.apache.curator.framework CuratorFramework CuratorFrameworkFactory CuratorFrameworkFactory$Builder])
   (:import [backtype.storm.utils Utils TestUtils ZookeeperAuthInfo])
   (:require [backtype.storm [zookeeper :as zk]])
   (:require [conjure.core])

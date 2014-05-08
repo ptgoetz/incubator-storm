@@ -35,7 +35,36 @@ public class ConfigValidation {
          */
         public void validateField(String name, Object field) throws IllegalArgumentException;
     }
-    
+
+    /**
+     * Returns a new FieldValidator for a List of the given Class.
+     * @param cls the Class of elements composing the list
+     * @return a FieldValidator for a list of the given class
+     */
+    static FieldValidator FieldListValidatorFactory(final Class cls) {
+        return new FieldValidator() {
+            @Override
+            public void validateField(String name, Object field)
+                    throws IllegalArgumentException {
+                if (field == null) {
+                    // A null value is acceptable.
+                    return;
+                }
+                if (field instanceof Iterable) {
+                    for (Object e : (Iterable)field) {
+                        if (! cls.isInstance(e)) {
+                            throw new IllegalArgumentException(
+                                    "Each element of the list " + name + " must be a " +
+                                            cls.getName() + ".");
+                        }
+                    }
+                    return;
+                }
+                throw new IllegalArgumentException(
+                        "Field " + name + " must be an Iterable of " + cls.getName());
+            }
+        };
+    }
     /**
      * Declares a method for validating configuration values that is nestable.
      */
@@ -251,6 +280,23 @@ public class ConfigValidation {
             }
             throw new IllegalArgumentException(
                     "Field " + name + " must be an Iterable containing only Strings or Maps of Strings");
+        }
+    };
+
+    /**
+     * Validates a String or a list of Strings
+     */
+    public static Object StringOrStringListValidator = new FieldValidator() {
+
+        private FieldValidator fv = FieldListValidatorFactory(String.class);
+
+        @Override
+        public void validateField(String name, Object o) throws IllegalArgumentException {
+            if (o == null || o instanceof String) {
+                // A null value or a String value is acceptable
+                return;
+            }
+            this.fv.validateField(name, o);
         }
     };
 }

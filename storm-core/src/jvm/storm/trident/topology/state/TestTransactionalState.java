@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import backtype.storm.utils.ZookeeperAuthInfo;
-import com.netflix.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.ACL;
 
@@ -39,7 +39,7 @@ public class TestTransactionalState extends TransactionalState {
         super(conf, id, subroot);
     }
 
-    public static void createNode(CuratorFramework curator, 
+    public static void createNode(CuratorFramework curator,
             String rootDir, byte[] data, List<ACL> acls, CreateMode mode)
             throws Exception {
        TransactionalState.createNode(curator, rootDir, data, acls, mode);

@@ -24,9 +24,6 @@ import backtype.storm.generated.StormTopology;
 import backtype.storm.generated.AuthorizationException;
 import clojure.lang.IFn;
 import clojure.lang.RT;
-import com.netflix.curator.framework.CuratorFramework;
-import com.netflix.curator.framework.CuratorFrameworkFactory;
-import com.netflix.curator.retry.ExponentialBackoffRetry;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,6 +34,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
@@ -50,6 +48,9 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.thrift.TException;
 import org.json.simple.JSONValue;
 import org.slf4j.Logger;
@@ -146,7 +147,13 @@ public class Utils {
             }
             URL resource = resources.iterator().next();
             Yaml yaml = new Yaml(new SafeConstructor());
-            Map ret = (Map) yaml.load(new InputStreamReader(resource.openStream()));
+            Map ret = null;
+            InputStream input = resource.openStream();
+            try {
+                ret = (Map) yaml.load(new InputStreamReader(input));
+            } finally {
+                input.close();
+            }
             if(ret==null) ret = new HashMap();
             
 
@@ -169,12 +176,16 @@ public class Utils {
         Map ret = new HashMap();
         String commandOptions = System.getProperty("storm.options");
         if(commandOptions != null) {
-            commandOptions = commandOptions.replaceAll("%%%%", " ");
             String[] configs = commandOptions.split(",");
             for (String config : configs) {
-                String[] options = config.split("=");
+                config = URLDecoder.decode(config);
+                String[] options = config.split("=", 2);
                 if (options.length == 2) {
-                    ret.put(options[0], options[1]);
+                    Object val = JSONValue.parse(options[1]);
+                    if (val == null) {
+                        val = options[1];
+                    }
+                    ret.put(options[0], val);
                 }
             }
         }
