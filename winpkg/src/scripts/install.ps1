@@ -104,7 +104,43 @@ function Main( $scriptDir )
 
     Write-Log "Start configuration of storm"
     Configure "storm" $nodeInstallRoot $null $config
+
+    ###
+    ### ACL Storm logs directory such that machine users can write to it
+    ###
+    if(Test-Path ENV:STORM_LOG_DIR)
+    {
+        $stormlogdir = $ENV:STORM_LOG_DIR
+    }
+    if( -not (Test-Path "$stormlogdir"))
+    {
+        Write-Log "Creating Storm logs folder"
+        $cmd = "mkdir `"$stormlogdir`""
+        Invoke-CmdChk $cmd
+    }
+    GiveFullPermissions "$stormlogdir" "Users"
+
     Write-Log "Installation of storm completed successfully"
+}
+
+### Gives full permissions on the folder to the given user
+function GiveFullPermissions(
+    [String]
+    [Parameter( Position=0, Mandatory=$true )]
+    $folder,
+    [String]
+    [Parameter( Position=1, Mandatory=$true )]
+    $username,
+    [bool]
+    [Parameter( Position=2, Mandatory=$false )]
+    $recursive = $false)
+{
+    Write-Log "Giving user/group `"$username`" full permissions to `"$folder`""
+    $cmd = "icacls `"$folder`" /grant ${username}:(OI)(CI)F"
+    if ($recursive) {
+        $cmd += " /T"
+    }
+    Invoke-CmdChk $cmd
 }
 
 try

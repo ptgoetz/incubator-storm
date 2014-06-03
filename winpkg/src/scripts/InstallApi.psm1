@@ -351,22 +351,8 @@ function Configure(
         {
             $active_config[$c.Key] = $c.Value
         }
-        AppendYamlConfigFile $yaml_file $active_config
+        WriteYamlConfigFile $yaml_file $active_config
 
-        ###
-        ### ACL Storm logs directory such that machine users can write to it
-        ###
-        if(Test-Path ENV:STORM_LOG_DIR)
-        {
-            $stormlogdir = $ENV:STORM_LOG_DIR
-        }
-        if( -not (Test-Path "$stormlogdir"))
-        {
-            Write-Log "Creating Storm logs folder"
-            $cmd = "mkdir `"$stormlogdir`""
-            Invoke-CmdChk $cmd
-        }
-        GiveFullPermissions "$stormlogdir" "Users"
         Write-Log "Configuration of storm is finished"
     }
     else
@@ -388,9 +374,9 @@ function GetDefaultConfig()
         "ui.port" = 8772}
 }
 
-### Helper routine that appends the given fileName Yaml file with the given
+### Helper routine that write the given fileName Yaml file with the given
 ### key/value configuration values.
-function AppendYamlConfigFile(
+function WriteYamlConfigFile(
     [String]
     [parameter( Position=0, Mandatory=$true )]
     $fileName,
@@ -405,19 +391,19 @@ function AppendYamlConfigFile(
         if ($item.Key.CompareTo("storm.zookeeper.servers") -eq 0)
         {
             # Only zookeeper servers need to be configured as a list
-            $content += $item.Key + ": " + "`n"
+            $content += $item.Key + ": " + "`r`n"
             $zookeeper_hosts = ($item.Value.Split(",") | foreach { $_.Trim() })
             foreach ($shost in $zookeeper_hosts)
             {
-                $content += ('- "' + $shost + '"'+ "`n")
+                $content += ('- "' + $shost + '"'+ "`r`n")
             }
         }
         else
         {
-            $content += $item.Key + ": " + $item.Value + "`n"
+            $content += $item.Key + ": " + $item.Value + "`r`n"
         }
     }
-    Add-Content $fileName $content -Force
+    Set-Content $fileName $content -Force
 }
 
 
@@ -426,26 +412,6 @@ function AppendYamlConfigFile(
 function empty-null($obj)
 {
    if ($obj -ne $null) { $obj }
-}
-
-### Gives full permissions on the folder to the given user 
-function GiveFullPermissions(
-    [String]
-    [Parameter( Position=0, Mandatory=$true )]
-    $folder,
-    [String]
-    [Parameter( Position=1, Mandatory=$true )]
-    $username,
-    [bool]
-    [Parameter( Position=2, Mandatory=$false )]
-    $recursive = $false)
-{
-    Write-Log "Giving user/group `"$username`" full permissions to `"$folder`""
-    $cmd = "icacls `"$folder`" /grant ${username}:(OI)(CI)F"
-    if ($recursive) {
-        $cmd += " /T"
-    }
-    Invoke-CmdChk $cmd
 }
 
 ### Checks if the given space separated roles are in the given array of
