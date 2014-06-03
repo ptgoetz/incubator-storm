@@ -106,7 +106,7 @@ function Install(
         {
             $shellApplication = new-object -com shell.application
             $zipPackage = $shellApplication.NameSpace("$HDP_RESOURCES_DIR\$FinalName.zip")
-            $destinationFolder = $shellApplication.NameSpace($stormInstallPath)
+            $destinationFolder = $shellApplication.NameSpace($nodeInstallRoot)
             $destinationFolder.CopyHere($zipPackage.Items(), 20)
         }
 		
