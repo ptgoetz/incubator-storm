@@ -94,7 +94,16 @@ function Main( $scriptDir )
     $roles = $roles.Trim()
     Write-Log "Roles are $roles"
     Install "storm" $nodeInstallRoot $serviceCredential $roles
-    Configure "storm" $nodeInstallRoot
+
+    $ENV:STORM_NIMBUS_LOCAL_DIR = $ENV:HDP_DATA_DIR.Replace('\\', '\')
+    $ENV:STORM_NIMBUS_LOCAL_DIR = $ENV:STORM_NIMBUS_LOCAL_DIR.Replace('\', '\\')
+    $config += @{"storm.zookeeper.servers"=$ENV:ZOOKEEPER_HOSTS;
+        "nimbus.host"='"' + $ENV:STORM_NIMBUS + '"';
+        "storm.local.dir"='"' + $ENV:STORM_NIMBUS_LOCAL_DIR+ '"'
+    }
+
+    Write-Log "Start configuration of storm"
+    Configure "storm" $nodeInstallRoot $null $config
     Write-Log "Installation of storm completed successfully"
 }
 

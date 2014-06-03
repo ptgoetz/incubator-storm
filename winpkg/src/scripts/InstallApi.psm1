@@ -75,8 +75,8 @@ function Install(
         ### $stormInstallPath: the name of the folder containing the application, after unzipping
         $stormInstallPath = Join-Path $nodeInstallRoot $FinalName
         $stormInstallToBin = Join-Path "$stormInstallPath" "bin"
-		
-	    Write-Log "Installing Apache $FinalName to $stormInstallPath"
+
+        Write-Log "Installing Apache $FinalName to $stormInstallPath"
 
         ### Create Node Install Root directory
         if( -not (Test-Path "$stormInstallPath"))
@@ -317,7 +317,7 @@ function StopService(
 ###     component: Component to be configured, it should be "storm"
 ###     nodeInstallRoot: Target install folder (for example "C:\Hadoop")
 ###     serviceCredential: Credential object used for service creation
-###     configs: 
+###     configs: Storm configuration that is going to overwrite the default
 ###
 ###############################################################################
 function Configure(
@@ -343,26 +343,15 @@ function Configure(
     {
         Write-Log "Configuring storm"
         Write-Log "Changing storm.yaml"
-        $ENV:STORM_NIMBUS_LOCAL_DIR = $ENV:HDP_DATA_DIR.Replace('\\', '\')
-        $ENV:STORM_NIMBUS_LOCAL_DIR = $ENV:STORM_NIMBUS_LOCAL_DIR.Replace('\', '\\')
         $yaml_file = "$ENV:STORM_HOME\conf\storm.yaml"
-        $content = Get-Content $yaml_file
-        $content+=@("storm.zookeeper.servers:")
-        $zookeeper_hosts = ($ENV:ZOOKEEPER_HOSTS.Split(",") | foreach { $_.Trim() })
-        foreach ($shost in $zookeeper_hosts)
+
+        $active_config = GetDefaultConfig
+        # Overwrite default configuration with user supplied configuration
+        foreach($c in $configs.GetEnumerator())
         {
-            $content+= ('- "'+$shost+'"')
+            $active_config[$c.Key] = $c.Value
         }
-        $content+= @(('nimbus.host: "'+$ENV:STORM_NIMBUS+'"'),
-        ('storm.local.dir: "'+$ENV:STORM_NIMBUS_LOCAL_DIR+'"'),
-        "logviewer.port: 8081",
-        "storm.messaging.transport: backtype.storm.messaging.netty.Context",
-        "storm.messaging.netty.buffer_size: 16384",
-        "storm.messaging.netty.max_retries: 10",
-        "storm.messaging.netty.min_wait_ms: 1000",
-        "storm.messaging.netty.max_wait_ms: 5000",
-        "ui.port: 8772")
-        Set-Content -Value $content -Path $yaml_file -Force
+        AppendYamlConfigFile $yaml_file $active_config
 
         ###
         ### ACL Storm logs directory such that machine users can write to it
@@ -384,6 +373,51 @@ function Configure(
     {
         throw "Configure: Unsupported compoment argument."
     }
+}
+
+### Return default Storm configuration which will be overwritten
+### by user provided values
+function GetDefaultConfig()
+{
+    return @{"logviewer.port" = 8081;
+        "storm.messaging.transport" = "backtype.storm.messaging.netty.Context";
+        "storm.messaging.netty.buffer_size" = 16384;
+        "storm.messaging.netty.max_retries" = 10;
+        "storm.messaging.netty.min_wait_ms" = 1000;
+        "storm.messaging.netty.max_wait_ms" = 5000;
+        "ui.port" = 8772}
+}
+
+### Helper routine that appends the given fileName Yaml file with the given
+### key/value configuration values.
+function AppendYamlConfigFile(
+    [String]
+    [parameter( Position=0, Mandatory=$true )]
+    $fileName,
+    [hashtable]
+    [parameter( Position=1, Mandatory=$true )]
+    $configs = @{}
+)
+{
+    $content = ""
+    foreach ($item in $configs.GetEnumerator())
+    {
+        if ($item.Key.CompareTo("storm.zookeeper.servers") -eq 0)
+        {
+            # Only zookeeper servers need to be configured as a list
+            $content += $item.Key + ": " + "`n"
+            $zookeeper_hosts = ($item.Value.Split(",") | foreach { $_.Trim() })
+            foreach ($shost in $zookeeper_hosts)
+            {
+                $content += ('- "' + $shost + '"'+ "`n")
+            }
+        }
+        else
+        {
+            $content += $item.Key + ": " + $item.Value + "`n"
+        }
+    }
+    Add-Content $fileName $content -Force
 }
 
 
