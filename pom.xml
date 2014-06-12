@@ -183,8 +183,9 @@
         <clojure-complete.version>0.2.3</clojure-complete.version>
         <mockito.version>1.9.5</mockito.version>
         <reply.version>0.3.0</reply.version>
-        <zookeeper.version>3.4.5</zookeeper.version>
-		<junit.version>3.8.1</junit.version>
+        <zookeeper.version>[3.4.5.2.2.0.0,3.4.5.2.3.0.0)</zookeeper.version>
+	<hadoop.version>[2.5.0.2.2.0.0,2.5.0.2.3.0.0)</hadoop.version>
+	<junit.version>3.8.1</junit.version>
 
     </properties>
 
@@ -537,6 +538,17 @@
             <id>clojars</id>
             <url>https://clojars.org/repo/</url>
         </repository>
+        <repository>
+       		<id>hortonworks.repo</id>
+       		<url>http://repo.hortonworks.com/content/repositories/releases</url>
+       		<name>Hortonworks Repo</name>
+       		<releases>
+          		<enabled>true</enabled>
+       		</releases>
+       		<snapshots>
+         		<enabled>false</enabled>
+       		</snapshots>
+     	</repository>
     </repositories>
 
     <build>
