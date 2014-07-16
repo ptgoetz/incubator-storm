@@ -136,7 +136,7 @@ function Install(
 		Write-Log "Node storm Role Services: $roles"
 
 		### Verify that roles are in the supported set	
-		CheckRole $roles @("supervisor", "nimbus", "ui", "logviewer")
+		CheckRole $roles @("supervisor", "nimbus", "ui", "logviewer", "drpc")
 		Write-Log "Role : $roles"
 		foreach( $service in empty-null ($roles -Split('\s+')))
 		{
@@ -371,7 +371,8 @@ function GetDefaultConfig()
         "storm.messaging.netty.max_retries" = 10;
         "storm.messaging.netty.min_wait_ms" = 1000;
         "storm.messaging.netty.max_wait_ms" = 5000;
-        "ui.port" = 8772}
+        "ui.port" = 8772;
+        "drpc.port" = 3772}
 }
 
 ### Helper routine that write the given fileName Yaml file with the given
@@ -388,12 +389,12 @@ function WriteYamlConfigFile(
     $content = ""
     foreach ($item in $configs.GetEnumerator())
     {
-        if ($item.Key.CompareTo("storm.zookeeper.servers") -eq 0)
+        if (($item.Key.CompareTo("storm.zookeeper.servers") -eq 0) -or ($item.Key.CompareTo("drpc.servers") -eq 0))
         {
-            # Only zookeeper servers need to be configured as a list
+            # zookeeper and drpc servers need to be configured as a list
             $content += $item.Key + ": " + "`r`n"
-            $zookeeper_hosts = ($item.Value.Split(",") | foreach { $_.Trim() })
-            foreach ($shost in $zookeeper_hosts)
+            $hosts = ($item.Value.Split(",") | foreach { $_.Trim() })
+            foreach ($shost in $hosts)
             {
                 $content += ('- "' + $shost + '"'+ "`r`n")
             }
