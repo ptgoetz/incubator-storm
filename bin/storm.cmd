@@ -33,21 +33,11 @@
 @rem
 @rem   STORM_ROOT_LOGGER The root appender. Default is INFO,console
 @rem
-setlocal enabledelayedexpansion
-set script_path=%~dp0
-
-@rem if running as a service, log to (daily rolling) files instead of console
-if "%1" == "--service" (
-  if not defined HADOOP_ROOT_LOGGER (
-    set STORM_ROOT_LOGGER=INFO,DRFA
-  )
-  set service_entry=true
-  shift
-)
 
 :main
+  setlocal enabledelayedexpansion
 
-  call %script_path%storm-config.cmd
+  call %~dp0storm-config.cmd
 
   set storm-command=%1
   if not defined storm-command (
@@ -56,9 +46,6 @@ if "%1" == "--service" (
 
   call :make_command_arguments %*
 
-  if not defined STORM_LOG_FILE (
-    set STORM_LOG_FILE=-Dlogfile.name=%storm-command%.log
-  )
   set shellcommands=classpath help version
   for %%i in ( %shellcommands% ) do (
     if %storm-command% == %%i set shellcommand=true
@@ -68,7 +55,7 @@ if "%1" == "--service" (
     goto :eof
   )
 
-  set corecommands=activate deactivate dev-zookeeper drpc kill list logviewer nimbus rebalance remoteconfvalue repl shell supervisor ui
+  set corecommands=activate deactivate dev-zookeeper drpc kill list nimbus logviewer rebalance repl shell supervisor ui
   for %%i in ( %corecommands% ) do (
     if %storm-command% == %%i set corecommand=true  
   )
@@ -85,16 +72,15 @@ if "%1" == "--service" (
     set storm-command-arguments=%4 %5 %6 %7 %8 %9
   )
   
+  if not defined STORM_LOG_FILE (
+    set STORM_LOG_FILE=-Dlogfile.name=%storm-command%.log
+  )
+
   if defined STORM_DEBUG ( 
     %JAVA% %JAVA_HEAP_MAX% %STORM_OPTS% %STORM_LOG_FILE% %CLASS% %storm-command-arguments%
   )
   set path=%PATH%;%STORM_BIN_DIR%;%STORM_SBIN_DIR%
-  set java_arguments=%JAVA_HEAP_MAX% %STORM_OPTS% %STORM_LOG_FILE% -classpath %CLASSPATH% %CLASS% %storm-command-arguments%
-  if defined service_entry (
-    call :makeServiceXml %java_arguments%
-  ) else (
-    call %JAVA% %java_arguments%
-  )
+  call start /b %JAVA% %JAVA_HEAP_MAX% %STORM_OPTS% %STORM_LOG_FILE% %CLASS% %storm-command-arguments%
   goto :eof
 
 
@@ -119,7 +105,14 @@ if "%1" == "--service" (
 
 :drpc
   set CLASS=backtype.storm.daemon.drpc
-  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS%
+  %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value drpc.childopts > temp.txt
+  FOR /F "delims=" %%i in (temp.txt) do (
+     FOR /F "tokens=1,* delims= " %%a in ("%%i") do (
+	  if %%a == VALUE: (
+	   set CHILDOPTS=%%b
+	   call :set_childopts)
+    )
+  )
   goto :eof
 
 :help
@@ -138,21 +131,30 @@ if "%1" == "--service" (
 
 :logviewer
   set CLASS=backtype.storm.daemon.logviewer
-  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS%
+   %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value logviewer.childopts > temp.txt
+  FOR /F "delims=" %%i in (temp.txt) do (
+     FOR /F "tokens=1,* delims= " %%a in ("%%i") do (
+	  if %%a == VALUE: (
+	   set CHILDOPTS=%%b
+	   call :set_childopts)
+    )
+  )
   goto :eof
 
 :nimbus
   set CLASS=backtype.storm.daemon.nimbus
-  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS% 
+  %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value nimbus.childopts > temp.txt
+  FOR /F "delims=" %%i in (temp.txt) do (
+     FOR /F "tokens=1,* delims= " %%a in ("%%i") do (
+	  if %%a == VALUE: (
+	   set CHILDOPTS=%%b
+	   call :set_childopts)
+    )
+  )
   goto :eof
 
 :rebalance
   set CLASS=backtype.storm.command.rebalance
-  set STORM_OPTS=%STORM_CLIENT_OPTS% %STORM_OPTS%
-  goto :eof
-
-:remoteconfvalue
-  set CLASS=backtype.storm.command.config_value
   set STORM_OPTS=%STORM_CLIENT_OPTS% %STORM_OPTS%
   goto :eof
 
@@ -168,50 +170,53 @@ if "%1" == "--service" (
   
 :supervisor
   set CLASS=backtype.storm.daemon.supervisor
-  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS% 
+  %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value supervisor.childopts > temp.txt
+  FOR /F "delims=" %%i in (temp.txt) do (
+     FOR /F "tokens=1,* delims= " %%a in ("%%i") do (
+	  if %%a == VALUE: (
+	   set CHILDOPTS=%%b
+	   call :set_childopts)
+    )
+  )
   goto :eof
 
 :ui
   set CLASS=backtype.storm.ui.core
   set CLASSPATH=%CLASSPATH%;%STORM_HOME%
-  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS% 
+  %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value ui.childopts > temp.txt
+  FOR /F "delims=" %%i in (temp.txt) do (
+     FOR /F "tokens=1,* delims= " %%a in ("%%i") do (
+	  if %%a == VALUE: (
+	   set CHILDOPTS=%%b
+	   call :set_childopts)
+    )
+  )
   goto :eof
 
 :version
   type %STORM_HOME%\RELEASE
   goto :eof
 
-:makeServiceXml
-  set arguments=%*
-  @echo ^<service^>
-  @echo   ^<id^>%storm-command%^</id^>
-  @echo   ^<name^>%storm-command%^</name^>
-  @echo   ^<description^>This service runs Storm %storm-command%^</description^>
-  @echo   ^<executable^>%JAVA%^</executable^>
-  @echo   ^<arguments^>%arguments%^</arguments^>
-  @echo ^</service^>
-  goto :eof
-
 :make_command_arguments
-  if [%2] == [] goto :eof
-  if "%1" == "--service" (
-    shift
+  if "%2" == "" goto :eof
+  set _count=0
+  set _shift=1
+  for %%i in (%*) do (
+    set /a _count=!_count!+1
+    if !_count! GTR %_shift% ( 
+	if not defined _arguments (
+	  set _arguments=%%i
+	) else (
+          set _arguments=!_arguments! %%i
+	)
+    )
   )
-  shift
-  set _stormarguments=
-
-  :MakeCmdArgsLoop 
-  if [%1]==[] goto :EndLoop 
-
-  if not defined _stormarguments (
-    set _stormarguments=%1
-  ) else (
-    set _stormarguments=!_stormarguments! %1
-  )
-  shift
-  goto :MakeCmdArgsLoop 
-  :EndLoop
-  set storm-command-arguments=%_stormarguments%
+  set storm-command-arguments=%_arguments%
+  goto :eof
+  
+:set_childopts
+  set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS% %CHILDOPTS%
+  del /F temp.txt
   goto :eof
 
 :print_usage
@@ -223,7 +228,7 @@ if "%1" == "--service" (
   @echo   dev-zookeeper        launches a fresh dev/test Zookeeper server
   @echo   drpc                 launches a DRPC daemon
   @echo   help
-  @echo   jar ^<jar^>          run a jar file
+  @echo   jar ^<jar^>            run a jar file
   @echo   kill                 kills the topology with the name topology-name
   @echo   list                 list the running topologies and their statuses
   @echo   logviewer            launches the log viewer daemon
