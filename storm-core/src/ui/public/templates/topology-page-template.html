@@ -16,15 +16,27 @@
 -->
 <script id="topology-summary-template" type="text/html">
   <table id="topology-summary-table">
-    <thead><tr><th><span class="tip right" title="The name given to the topology by when it was submitted.">Name</span></th><th><span class="tip right" title="The unique ID given to a Topology each time it is launched.">Id</span></th><th><span class="tip above" title="The status can be one of ACTIVE, INACTIVE, KILLED, or REBALANCING.">Status</span></th><th><span class="tip above" title="The time since the Topology was submitted.">Uptime</span></th><th><span class="tip above" title="The number of Workers (processes).">Num workers</span></th><th><span class="tip above" title="Executors are threads in a Worker process.">Num executors</span></th><th><span class="tip above" title="A Task is an instance of a Bolt or Spout. The number of Tasks is almost always equal to the number of Executors.">Num tasks</span></th></tr></thead>
+    <thead><tr>
+      <th><span class="tip right" title="The name given to the topology by when it was submitted.">Name</span></th>
+      <th><span class="tip right" title="The unique ID given to a Topology each time it is launched.">Id</span></th>
+      <th><span class="tip above" title="The user that submitted the Topology, if authentication is enabled.">Owner</span></th>
+      <th><span class="tip above" title="The status can be one of ACTIVE, INACTIVE, KILLED, or REBALANCING.">Status</span></th>
+      <th><span class="tip above" title="The time since the Topology was submitted.">Uptime</span></th>
+      <th><span class="tip above" title="The number of Workers (processes).">Num workers</span></th>
+      <th><span class="tip above" title="Executors are threads in a Worker process.">Num executors</span></th>
+      <th><span class="tip above" title="A Task is an instance of a Bolt or Spout. The number of Tasks is almost always equal to the number of Executors.">Num tasks</span></th>
+      <th><span class="tip left" title="This shows information from the scheduler about the latest attempt to schedule the Topology on the cluster.">Scheduler Info</span></th>
+    </tr></thead>
     <tbody>
       <tr>
         <td>{{name}}</td>
         <td>{{id}}</td>
+        <td>{{owner}}</td>
         <td>{{status}}</td>
         <td>{{uptime}}</td>
         <td>{{workersTotal}}</td>
         <td>{{executorsTotal}}</td>
+        <td>{{schedulerInfo}}</td>
         <td>{{tasksTotal}}</td>
       </tr>
     </tbody>
@@ -113,7 +125,7 @@
         <td>{{errorHost}}</td>
         <td><a href="{{errorWorkerLogLink}}">{{errorPort}}</a></td>
         <td>
-            <span id="{{errorLapsedSecs}}" class="errorSpan">{{lastError}}</span>
+          <span id="{{errorLapsedSecs}}" class="errorSpan">{{lastError}}</span>
         </td>
         {{/spouts}}
     </tbody>
@@ -141,12 +153,20 @@
         <td>{{errorHost}}</td>
         <td><a href="{{errorWorkerLogLink}}">{{errorPort}}</a></td>
         <td>
-            <span id="{{errorLapsedSecs}}" class="errorSpan">{{lastError}}</span>
+          <span id="{{errorLapsedSecs}}" class="errorSpan">{{lastError}}</span>
         </td>
         {{/bolts}}
     </tbody>
 </script>
 
 <script id="topology-actions-template" type="text/html">
-  <input {{activateStatus}} onclick="confirmAction('{{id}}', '{{name}}', 'activate', false, 0)" type="button" value="Activate"><input {{deactivateStatus}} onclick="confirmAction('{{id}}', '{{name}}', 'deactivate', false, 0)" type="button" value="Deactivate"><input {{rebalanceStatus}} onclick="confirmAction('{{id}}', '{{name}}', 'rebalance', true, {{msgTimeout}})" type="button" value="Rebalance"><input {{killStatus}} onclick="confirmAction('{{id}}', '{{name}}', 'kill', true, 30)" type="button" value="Kill">
+  {{#uiActionsEnabled}}
+  <h2>Topology actions</h2>
+  <p id="topology-actions">
+    <input {{activateStatus}} onclick="confirmAction('{{id}}', '{{name}}', 'activate', false, 0)" type="button" value="Activate">
+    <input {{deactivateStatus}} onclick="confirmAction('{{id}}', '{{name}}', 'deactivate', false, 0)" type="button" value="Deactivate">
+    <input {{rebalanceStatus}} onclick="confirmAction('{{id}}', '{{name}}', 'rebalance', true, {{msgTimeout}})" type="button" value="Rebalance">
+    <input {{killStatus}} onclick="confirmAction('{{id}}', '{{name}}', 'kill', true, 30)" type="button" value="Kill">
+  </p>
+  {{/uiActionsEnabled}}
 </script>
