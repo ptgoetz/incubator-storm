@@ -19,23 +19,23 @@
 package backtype.storm.security.auth;
 
 import java.io.IOException;
-import java.util.Random;
+
+import backtype.storm.utils.StormBoundedExponentialBackoffRetry;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import backtype.storm.utils.Utils.BoundedExponentialBackoffRetry;
 
 public class TBackoffConnect {
     private static final Logger LOG = LoggerFactory.getLogger(TBackoffConnect.class);
     private int _completedRetries = 0;
     private int _retryTimes;
-    private BoundedExponentialBackoffRetry waitGrabber;
+    private StormBoundedExponentialBackoffRetry waitGrabber;
 
     public TBackoffConnect(int retryTimes, int retryInterval, int retryIntervalCeiling) {
 
         _retryTimes = retryTimes;
-        waitGrabber = new BoundedExponentialBackoffRetry(retryInterval,
+        waitGrabber = new StormBoundedExponentialBackoffRetry(retryInterval,
                                                          retryTimes,
                                                          retryIntervalCeiling);
     }
