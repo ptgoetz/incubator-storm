@@ -503,7 +503,7 @@
 (defnk write-script
   [dir command :environment {}]
   (let [script-src (str "#!/bin/bash\n" (clojure.string/join "" (map (fn [[k v]] (str (shell-cmd ["export" (str k "=" v)]) ";\n")) environment)) "\nexec " (shell-cmd command) ";")
-        script-path (str dir "/storm-worker-script.sh")
+        script-path (str dir file-path-separator "storm-worker-script.sh")
         - (spit script-path script-src)]
     script-path
   ))
