@@ -195,7 +195,7 @@
                      "User cannot be blank when calling worker-launcher.")))
         wl-initial (conf SUPERVISOR-WORKER-LAUNCHER)
         storm-home (System/getProperty "storm.home")
-        wl (if wl-initial wl-initial (str storm-home "/bin/worker-launcher"))
+        wl (if wl-initial wl-initial (str storm-home file-path-separator "bin" file-path-separator "worker-launcher"))
         command (concat [wl user] args)]
     (log-message "Running as user:" user " command:" (pr-str command))
     (launch-process command :environment environment :log-prefix log-prefix :exit-code-callback exit-code-callback)
