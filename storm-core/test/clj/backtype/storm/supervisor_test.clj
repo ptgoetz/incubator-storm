@@ -325,7 +325,7 @@
                      set-worker-user! nil
                      supervisor/write-log-metadata! nil
                      launch-process nil
-                     current-classpath "/base"]
+                     current-classpath (str file-path-separator "base")]
                     (supervisor/launch-worker mock-supervisor
                                               mock-storm-id
                                               mock-port
