@@ -23,13 +23,18 @@ import json
 
 
 SLIDER_DIR = os.getenv('SLIDER_HOME', None)
+STORM_HOME = os.getenv('STORM_HOME', None)
+
+if  STORM_HOME == None or (not os.path.exists(STORM_HOME)):
+    print "Unable to find STORM_HOME. Please configure STORM_HOME before running storm-slider"
+    sys.exit(1)
 
 if  SLIDER_DIR == None or (not os.path.exists(SLIDER_DIR)):
     print "Unable to find SLIDER_HOME. Please configure SLIDER_HOME before running storm-slider"
     sys.exit(1)
 
-if not os.path.exists("/usr/bin/storm"):
-    print "Faled find storm cmd. Please storm package"
+if not os.path.exists(STORM_HOME+"/bin/storm"):
+    print "Faled find storm cmd. Please install storm package"
     sys.exit(1)
 
 SLIDER_CLIENT_CONF = SLIDER_DIR + "/conf/slider-client.xml"
@@ -52,28 +57,22 @@ def get_storm_config_json(appname):
         print "Unable to read slider deployed storm config"
         sys.exit(1)
 
-def json_to_yaml():
-    if not os.path.exists(STORM_CONF_DIR):
-        os.makedirs(STORM_CONF_DIR)
+def storm_cmd_args(args):
     file = open(STORM_TEMP_JSON_FILE,"r")
     data = json.load(file)
-    f = open(STORM_CONF_FILE,"w")
-    f.write("nimbus.host: "+data["nimbus.host"]+"\n")
-    f.write("nimbus.thrift.port: "+data["nimbus.thrift.port"]+"\n")
-
+    args.insert(0, "storm")
+    args.extend(["-c nimbus.host="+data["nimbus.host"], 
+                 "-c nimbus.thrift.port="+data["nimbus.thrift.port"]])
+    return args
+                
 def main():
-    if len(sys.argv) <= 1:
+    if len(sys.argv) < 2:
+        print "Please provide yarn appName followed by storm command."
         os.execvp("storm" , ["help"])
         sys.exit(-1)
 
     get_storm_config_json(sys.argv[1])
-    json_to_yaml()
-    storm_args = sys.argv[2:]
-    storm_args.insert(0, "storm")
-    if len(storm_args) < 1:
-        os.execvp("storm" , ["help"])
-        sys.exit(-1)
-
+    storm_args = storm_cmd_args(sys.argv[2:])
     os.execvp("storm",storm_args)
 
 if __name__ == "__main__":
