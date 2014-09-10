@@ -85,6 +85,7 @@ public class TestHiveBolt {
     private Config config = new Config();
     private HiveBolt bolt;
 
+
     @Rule
     public TemporaryFolder dbFolder = new TemporaryFolder();
 
@@ -105,7 +106,7 @@ public class TestHiveBolt {
         TxnDbUtil.prepDb();
         SessionState.start(new CliSessionState(conf));
         driver = new Driver(conf);
-        //driver.init();
+        // driver.init();
     }
 
     @Before
@@ -115,6 +116,7 @@ public class TestHiveBolt {
         dbLocation = "raw://" + dbFolder.newFolder(dbName + ".db").getCanonicalPath();
         HiveSetupUtil.createDbAndTable(conf, dbName, tblName, Arrays.asList(partitionVals.split(",")),
                 colNames, colTypes, partNames, dbLocation);
+        System.out.println("done");
     }
 
     @Test

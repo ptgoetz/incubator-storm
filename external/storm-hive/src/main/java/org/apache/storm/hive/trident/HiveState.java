@@ -26,6 +26,8 @@ import org.apache.storm.hive.common.HiveWriter;
 import org.apache.storm.hive.common.HiveWriter;
 import org.apache.hive.hcatalog.streaming.*;
 import org.apache.storm.hive.common.HiveOptions;
+import org.apache.storm.hive.common.HiveUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +55,8 @@ public class HiveState implements State {
     private ExecutorService callTimeoutPool;
     private transient Timer heartBeatTimer;
     private AtomicBoolean timeToSendHeartBeat = new AtomicBoolean(false);
+    private UserGroupInformation ugi = null;
+    private Boolean kerberosEnabled = false;
     HashMap<HiveEndPoint, HiveWriter> allWriters;
 
     public HiveState(HiveOptions options) {
@@ -71,11 +75,29 @@ public class HiveState implements State {
 
     public void prepare(Map conf, IMetricsContext metrics, int partitionIndex, int numPartitions)  {
         try {
+            if(options.getKerberosPrincipal() == null && options.getKerberosKeytab() == null) {
+                kerberosEnabled = false;
+            } else if(options.getKerberosPrincipal() != null && options.getKerberosKeytab() != null) {
+                kerberosEnabled = true;
+            } else {
+                throw new IllegalArgumentException("To enable Kerberos, need to set both KerberosPrincipal " +
+                                                   " & KerberosKeytab");
+            }
+
+            if (kerberosEnabled) {
+                try {
+                    ugi = HiveUtils.authenticate(options.getKerberosKeytab(), options.getKerberosPrincipal());
+                } catch(HiveUtils.AuthenticationFailed ex) {
+                    LOG.error("Hive kerberos authentication failed " + ex.getMessage(), ex);
+                    throw new IllegalArgumentException(ex);
+                }
+            }
+
             allWriters = new HashMap<HiveEndPoint,HiveWriter>();
             String timeoutName = "hive-bolt-%d";
             this.callTimeoutPool = Executors.newFixedThreadPool(1,
                                                                 new ThreadFactoryBuilder().setNameFormat(timeoutName).build());
-            heartBeatTimer = new Timer();
+            heartBeatTimer= new Timer();
             setupHeartBeatTimer();
         } catch(Exception e) {
             LOG.warn("unable to make connection to hive ",e);
@@ -98,7 +120,7 @@ public class HiveState implements State {
         }
         for (TridentTuple tuple : tuples) {
             List<String> partitionVals = options.getMapper().mapPartitions(tuple);
-            HiveEndPoint endPoint = options.makeEndPoint(partitionVals);
+            HiveEndPoint endPoint = HiveUtils.makeEndPoint(partitionVals, options);
             HiveWriter writer = getOrCreateWriter(endPoint);
             writer.write(options.getMapper().mapRecord(tuple));
             currentBatchSize++;
@@ -128,12 +150,12 @@ public class HiveState implements State {
     }
 
     private HiveWriter getOrCreateWriter(HiveEndPoint endPoint)
-        throws IOException, ClassNotFoundException, StreamingException, InterruptedException {
+        throws HiveWriter.ConnectFailure, InterruptedException {
         try {
             HiveWriter writer = allWriters.get( endPoint );
             if( writer == null ) {
                 LOG.info("Creating Writer to Hive end point : " + endPoint);
-                writer = options.makeHiveWriter(endPoint, callTimeoutPool);
+                writer = HiveUtils.makeHiveWriter(endPoint, callTimeoutPool, ugi, options);
                 if(allWriters.size() > options.getMaxOpenConnections()){
                     int retired = retireIdleWriters();
                     if(retired==0) {
@@ -143,10 +165,7 @@ public class HiveState implements State {
                 allWriters.put(endPoint, writer);
             }
             return writer;
-        } catch (ClassNotFoundException e) {
-            LOG.error("Failed to create HiveWriter for endpoint: " + endPoint, e);
-            throw e;
-        } catch (StreamingException e) {
+        } catch (HiveWriter.ConnectFailure e) {
             LOG.error("Failed to create HiveWriter for endpoint: " + endPoint, e);
             throw e;
         }

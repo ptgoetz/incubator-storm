@@ -27,6 +27,8 @@ import org.apache.storm.hive.common.HiveWriter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.hive.hcatalog.streaming.*;
 import org.apache.storm.hive.common.HiveOptions;
+import org.apache.storm.hive.common.HiveUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +52,9 @@ public class HiveBolt extends  BaseRichBolt {
     private Integer currentBatchSize;
     private ExecutorService callTimeoutPool;
     private transient Timer heartBeatTimer;
+    private Boolean kerberosEnabled = false;
     private AtomicBoolean timeToSendHeartBeat = new AtomicBoolean(false);
+    private UserGroupInformation ugi = null;
     HashMap<HiveEndPoint, HiveWriter> allWriters;
 
     public HiveBolt(HiveOptions options) {
@@ -61,6 +65,23 @@ public class HiveBolt extends  BaseRichBolt {
     @Override
     public void prepare(Map conf, TopologyContext topologyContext, OutputCollector collector)  {
         try {
+            if(options.getKerberosPrincipal() == null && options.getKerberosKeytab() == null) {
+                kerberosEnabled = false;
+            } else if(options.getKerberosPrincipal() != null && options.getKerberosKeytab() != null) {
+                kerberosEnabled = true;
+            } else {
+                throw new IllegalArgumentException("To enable Kerberos, need to set both KerberosPrincipal " +
+                                                   " & KerberosKeytab");
+            }
+
+            if (kerberosEnabled) {
+                try {
+                    ugi = HiveUtils.authenticate(options.getKerberosKeytab(), options.getKerberosPrincipal());
+                } catch(HiveUtils.AuthenticationFailed ex) {
+                    LOG.error("Hive Kerberos authentication failed " + ex.getMessage(), ex);
+                    throw new IllegalArgumentException(ex);
+                }
+            }
             this.collector = collector;
             allWriters = new HashMap<HiveEndPoint,HiveWriter>();
             String timeoutName = "hive-bolt-%d";
@@ -77,7 +98,7 @@ public class HiveBolt extends  BaseRichBolt {
     public void execute(Tuple tuple) {
         try {
             List<String> partitionVals = options.getMapper().mapPartitions(tuple);
-            HiveEndPoint endPoint = options.makeEndPoint(partitionVals);
+            HiveEndPoint endPoint = HiveUtils.makeEndPoint(partitionVals, options);
             HiveWriter writer = getOrCreateWriter(endPoint);
             if(timeToSendHeartBeat.compareAndSet(true, false)) {
                 enableHeartBeatOnAllWriters();
@@ -155,12 +176,12 @@ public class HiveBolt extends  BaseRichBolt {
     }
 
     private HiveWriter getOrCreateWriter(HiveEndPoint endPoint)
-        throws IOException, ClassNotFoundException, StreamingException, InterruptedException {
+        throws HiveWriter.ConnectFailure, InterruptedException {
         try {
             HiveWriter writer = allWriters.get( endPoint );
             if( writer == null ) {
                 LOG.info("Creating Writer to Hive end point : " + endPoint);
-                writer = options.makeHiveWriter(endPoint, callTimeoutPool);
+                writer = HiveUtils.makeHiveWriter(endPoint, callTimeoutPool, ugi, options);
                 if(allWriters.size() > options.getMaxOpenConnections()){
                     int retired = retireIdleWriters();
                     if(retired==0) {
@@ -170,17 +191,11 @@ public class HiveBolt extends  BaseRichBolt {
                 allWriters.put(endPoint, writer);
             }
             return writer;
-        } catch (ClassNotFoundException e) {
-            LOG.error("Failed to create HiveWriter for endpoint: " + endPoint, e);
-            throw e;
-        } catch (StreamingException e) {
+        } catch (HiveWriter.ConnectFailure e) {
             LOG.error("Failed to create HiveWriter for endpoint: " + endPoint, e);
             throw e;
         }
-
     }
-
-
 
     /**
      * Locate writer that has not been used for longest time and retire it

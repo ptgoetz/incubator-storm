@@ -54,10 +54,21 @@ public class HiveTopology {
         DelimitedRecordHiveMapper mapper = new DelimitedRecordHiveMapper()
             .withColumnFields(new Fields(colNames))
             .withPartitionFields(new Fields(partNames));
-        HiveOptions hiveOptions = new HiveOptions(metaStoreURI,dbName,tblName,mapper)
+        HiveOptions hiveOptions;
+        if (args.length == 6) {
+            hiveOptions = new HiveOptions(metaStoreURI,dbName,tblName,mapper)
+                .withTxnsPerBatch(10)
+                .withBatchSize(1000)
+                .withIdleTimeout(10)
+                .withKerberosKeytab(args[5])
+                .withKerberosPrincipal(args[6]);
+        } else {
+            hiveOptions = new HiveOptions(metaStoreURI,dbName,tblName,mapper)
                 .withTxnsPerBatch(10)
                 .withBatchSize(1000)
                 .withIdleTimeout(10);
+        }
+
         HiveBolt hiveBolt = new HiveBolt(hiveOptions);
         TopologyBuilder builder = new TopologyBuilder();
         builder.setSpout(USER_SPOUT_ID, spout, 1);
@@ -73,10 +84,10 @@ public class HiveTopology {
             cluster.shutdown();
             System.out.println("cluster shutdown");
             System.exit(0);
-        } else if(args.length == 4) {
+        } else if(args.length >= 4) {
             StormSubmitter.submitTopology(args[3], config, builder.createTopology());
         } else {
-            System.out.println("Usage: HiveTopology metastoreURI dbName tableName [topologyNamey]");
+            System.out.println("Usage: HiveTopology metastoreURI dbName tableName [topologyNamey] [keytab file] [principal name]");
         }
     }
 
