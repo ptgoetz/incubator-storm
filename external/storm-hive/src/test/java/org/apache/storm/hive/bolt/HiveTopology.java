@@ -20,6 +20,7 @@ package org.apache.storm.hive.bolt;
 
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
+import backtype.storm.StormSubmitter;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -63,14 +64,20 @@ public class HiveTopology {
         // SentenceSpout --> MyBolt
         builder.setBolt(BOLT_ID, hiveBolt, 1)
                 .shuffleGrouping(USER_SPOUT_ID);
-        LocalCluster cluster = new LocalCluster();
-        cluster.submitTopology(TOPOLOGY_NAME, config, builder.createTopology());
-        waitForSeconds(20);
-        cluster.killTopology(TOPOLOGY_NAME);
-        System.out.println("cluster begin to shutdown");
-        //cluster.shutdown();
-        System.out.println("cluster shutdown");
-        System.exit(0);
+        if (args.length == 3) {
+            LocalCluster cluster = new LocalCluster();
+            cluster.submitTopology(TOPOLOGY_NAME, config, builder.createTopology());
+            waitForSeconds(20);
+            cluster.killTopology(TOPOLOGY_NAME);
+            System.out.println("cluster begin to shutdown");
+            cluster.shutdown();
+            System.out.println("cluster shutdown");
+            System.exit(0);
+        } else if(args.length == 4) {
+            StormSubmitter.submitTopology(args[3], config, builder.createTopology());
+        } else {
+            System.out.println("Usage: HiveTopology metastoreURI dbName tableName [topologyNamey]");
+        }
     }
 
     public static void waitForSeconds(int seconds) {

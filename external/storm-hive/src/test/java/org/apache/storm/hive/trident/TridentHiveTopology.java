@@ -24,6 +24,7 @@ import org.apache.storm.hive.common.HiveOptions;
 
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
+import backtype.storm.StormSubmitter;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
@@ -77,16 +78,26 @@ public class TridentHiveTopology {
         String tblName = args[2];
         Config conf = new Config();
         conf.setMaxSpoutPending(5);
-        LocalCluster cluster = new LocalCluster();
-        cluster.submitTopology("wordCounter", conf, buildTopology(metaStoreURI, dbName, tblName));
-        System.out.println("waiting for 60 seconds");
-        waitForSeconds(60);
-        System.out.println("killing topology");
-        cluster.killTopology("wordCounter");
-        System.out.println("cluster shutdown");
-        cluster.shutdown();
-        System.out.println("cluster shutdown");
-        System.exit(0);
+        if(args.length == 3) {
+            LocalCluster cluster = new LocalCluster();
+            cluster.submitTopology("wordCounter", conf, buildTopology(metaStoreURI, dbName, tblName));
+            System.out.println("waiting for 60 seconds");
+            waitForSeconds(60);
+            System.out.println("killing topology");
+            cluster.killTopology("wordCounter");
+            System.out.println("cluster shutdown");
+            cluster.shutdown();
+            System.out.println("cluster shutdown");
+            System.exit(0);
+        } else if(args.length == 4) {
+            try {
+                StormSubmitter.submitTopology(args[3], conf, buildTopology(metaStoreURI, dbName, tblName));
+            } catch(Exception e) {
+                System.out.println("Failed to submit topology "+e);
+            }
+        } else {
+            System.out.println("Usage: TridentHiveTopology metastoreURI dbName tableName [topologyNamey]");
+        }
 
     }
 
