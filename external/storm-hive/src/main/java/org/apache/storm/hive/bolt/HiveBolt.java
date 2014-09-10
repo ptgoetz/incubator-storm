@@ -49,7 +49,7 @@ public class HiveBolt extends  BaseRichBolt {
     private HiveOptions options;
     private Integer currentBatchSize;
     private ExecutorService callTimeoutPool;
-    private transient Timer heartBeatTimer = new Timer();
+    private transient Timer heartBeatTimer;
     private AtomicBoolean timeToSendHeartBeat = new AtomicBoolean(false);
     HashMap<HiveEndPoint, HiveWriter> allWriters;
 
@@ -66,6 +66,7 @@ public class HiveBolt extends  BaseRichBolt {
             String timeoutName = "hive-bolt-%d";
             this.callTimeoutPool = Executors.newFixedThreadPool(1,
                                 new ThreadFactoryBuilder().setNameFormat(timeoutName).build());
+            heartBeatTimer = new Timer();
             setupHeartBeatTimer();
         } catch(Exception e) {
             LOG.warn("unable to make connection to hive ",e);
