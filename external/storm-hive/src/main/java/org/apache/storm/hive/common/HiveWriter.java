@@ -383,7 +383,7 @@ public class HiveWriter {
         }
     }
 
-    private class TxnFailure extends Failure {
+    public static class TxnFailure extends Failure {
         public TxnFailure(TransactionBatch txnBatch, Throwable cause) {
             super("Failed switching to next Txn in TxnBatch " + txnBatch, cause);
         }

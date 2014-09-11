@@ -28,6 +28,7 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
 
 import org.apache.storm.hive.bolt.mapper.DelimitedRecordHiveMapper;
 import org.apache.storm.hive.common.HiveOptions;
@@ -37,7 +38,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 
-public class HiveTopology {
+public class HiveTopologyPartitioned {
     static final String USER_SPOUT_ID = "user-spout";
     static final String BOLT_ID = "my-hive-bolt";
     static final String TOPOLOGY_NAME = "hive-test-topology1";
@@ -58,14 +59,14 @@ public class HiveTopology {
         if (args.length == 6) {
             hiveOptions = new HiveOptions(metaStoreURI,dbName,tblName,mapper)
                 .withTxnsPerBatch(10)
-                .withBatchSize(100)
+                .withBatchSize(1000)
                 .withIdleTimeout(10)
                 .withKerberosKeytab(args[5])
                 .withKerberosPrincipal(args[6]);
         } else {
             hiveOptions = new HiveOptions(metaStoreURI,dbName,tblName,mapper)
                 .withTxnsPerBatch(10)
-                .withBatchSize(100)
+                .withBatchSize(1000)
                 .withIdleTimeout(10);
         }
 
@@ -87,7 +88,7 @@ public class HiveTopology {
         } else if(args.length >= 4) {
             StormSubmitter.submitTopology(args[3], config, builder.createTopology());
         } else {
-            System.out.println("Usage: HiveTopology metastoreURI dbName tableName [topologyNamey] [keytab file] [principal name]");
+            System.out.println("Usage: HiveTopologyPartitioned metastoreURI dbName tableName [topologyNamey] [keytab file] [principal name]");
         }
     }
 
@@ -134,10 +135,10 @@ public class HiveTopology {
             count++;
             total++;
             if(count > 1000){
+		Utils.sleep(1000);
                 count = 0;
                 System.out.println("Pending count: " + this.pending.size() + ", total: " + this.total);
             }
-            Thread.yield();
         }
 
         public void ack(Object msgId) {

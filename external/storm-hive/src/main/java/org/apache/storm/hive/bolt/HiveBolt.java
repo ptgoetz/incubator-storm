@@ -106,7 +106,7 @@ public class HiveBolt extends  BaseRichBolt {
             writer.write(options.getMapper().mapRecord(tuple));
             currentBatchSize++;
             if(currentBatchSize >= options.getBatchSize()) {
-                writer.flush(true);
+                flushAllWriters();
                 currentBatchSize = 0;
             }
             collector.ack(tuple);
@@ -169,6 +169,13 @@ public class HiveBolt extends  BaseRichBolt {
         }
     }
 
+    private void flushAllWriters()
+        throws HiveWriter.CommitFailure, HiveWriter.TxnBatchFailure, HiveWriter.TxnFailure, InterruptedException {
+        for(HiveWriter writer: allWriters.values()) {
+            writer.flush(true);
+        }
+    }
+
     private void enableHeartBeatOnAllWriters() {
         for (HiveWriter writer : allWriters.values()) {
             writer.setHeartBeatNeeded();
@@ -180,7 +187,7 @@ public class HiveBolt extends  BaseRichBolt {
         try {
             HiveWriter writer = allWriters.get( endPoint );
             if( writer == null ) {
-                LOG.info("Creating Writer to Hive end point : " + endPoint);
+                LOG.debug("Creating Writer to Hive end point : " + endPoint);
                 writer = HiveUtils.makeHiveWriter(endPoint, callTimeoutPool, ugi, options);
                 if(allWriters.size() > options.getMaxOpenConnections()){
                     int retired = retireIdleWriters();

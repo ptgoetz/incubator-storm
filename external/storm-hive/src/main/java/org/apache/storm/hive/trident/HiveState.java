@@ -125,7 +125,7 @@ public class HiveState implements State {
             writer.write(options.getMapper().mapRecord(tuple));
             currentBatchSize++;
             if(currentBatchSize >= options.getBatchSize()) {
-                writer.flush(true);
+                flushAllWriters();
                 currentBatchSize = 0;
             }
         }
@@ -140,6 +140,13 @@ public class HiveState implements State {
                         setupHeartBeatTimer();
                     }
                 }, options.getHeartBeatInterval() * 1000);
+        }
+    }
+
+    private void flushAllWriters()
+        throws HiveWriter.CommitFailure, HiveWriter.TxnBatchFailure, HiveWriter.TxnFailure, InterruptedException {
+        for(HiveWriter writer: allWriters.values()) {
+            writer.flush(true);
         }
     }
 
