@@ -46,14 +46,12 @@ public class HiveTopology {
         String metaStoreURI = args[0];
         String dbName = args[1];
         String tblName = args[2];
-        String[] partNames = {"city","state"};
-        String[] colNames = {"id","name","phone","street"};
+        String[] colNames = {"id","name","phone","street","city","state"};
         Config config = new Config();
         config.setNumWorkers(1);
         UserDataSpout spout = new UserDataSpout();
         DelimitedRecordHiveMapper mapper = new DelimitedRecordHiveMapper()
-            .withColumnFields(new Fields(colNames))
-            .withPartitionFields(new Fields(partNames));
+            .withColumnFields(new Fields(colNames));
         HiveOptions hiveOptions;
         if (args.length == 6) {
             hiveOptions = new HiveOptions(metaStoreURI,dbName,tblName,mapper)
