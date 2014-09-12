@@ -205,8 +205,8 @@
 :makeServiceXml
   set arguments=%*
   @echo ^<service^>
-  @echo   ^<id^>%storm-command%^</id^>
-  @echo   ^<name^>%storm-command%^</name^>
+  @echo   ^<id^>storm_%storm-command%^</id^>
+  @echo   ^<name^>storm_%storm-command%^</name^>
   @echo   ^<description^>This service runs Storm %storm-command%^</description^>
   @echo   ^<executable^>%JAVA%^</executable^>
   @echo   ^<arguments^>%arguments%^</arguments^>
