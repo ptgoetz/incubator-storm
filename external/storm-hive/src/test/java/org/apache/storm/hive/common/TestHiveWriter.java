@@ -30,6 +30,7 @@ import org.apache.hive.hcatalog.streaming.StreamingException;
 import org.apache.storm.hive.bolt.mapper.DelimitedRecordHiveMapper;
 import org.apache.storm.hive.bolt.mapper.HiveMapper;
 import org.apache.storm.hive.bolt.HiveSetupUtil;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -67,6 +68,7 @@ public class TestHiveWriter {
     private ExecutorService callTimeoutPool;
     private final Driver driver;
     int timeout = 10000; // msec
+    UserGroupInformation ugi = null;
 
     @Rule
     public TemporaryFolder dbFolder = new TemporaryFolder();
@@ -81,7 +83,6 @@ public class TestHiveWriter {
 
         // 1) Start metastore
         conf = HiveSetupUtil.getHiveConf();
-        System.out.println("hello "+conf.get("javax.jdo.option.ConnectionURL"));
         TxnDbUtil.setConfValues(conf);
         TxnDbUtil.cleanDb();
         TxnDbUtil.prepDb();
@@ -110,7 +111,7 @@ public class TestHiveWriter {
             .withPartitionFields(new Fields(partNames));
         HiveEndPoint endPoint = new HiveEndPoint(metaStoreURI, dbName, tblName, Arrays.asList(partitionVals));
         HiveWriter writer = new HiveWriter(endPoint, 10, true, timeout
-                                           ,callTimeoutPool,mapper);
+                                           ,callTimeoutPool, mapper, ugi);
         writer.close();
     }
 
@@ -121,7 +122,7 @@ public class TestHiveWriter {
             .withPartitionFields(new Fields(partNames));
         HiveEndPoint endPoint = new HiveEndPoint(metaStoreURI, dbName, tblName, Arrays.asList(partitionVals));
         HiveWriter writer = new HiveWriter(endPoint, 10, true, timeout
-                                           , callTimeoutPool, mapper);
+                                           , callTimeoutPool, mapper, ugi);
         writeTuples(writer,mapper,3);
         writer.flush(false);
         writer.close();
@@ -136,7 +137,7 @@ public class TestHiveWriter {
 
         HiveEndPoint endPoint = new HiveEndPoint(metaStoreURI, dbName, tblName, Arrays.asList(partitionVals));
         HiveWriter writer = new HiveWriter(endPoint, 10, true, timeout
-                                           , callTimeoutPool, mapper);
+                                           , callTimeoutPool, mapper, ugi);
         Tuple tuple = generateTestTuple("1","abc");
         writer.write(mapper.mapRecord(tuple));
         checkRecordCountInTable(dbName,tblName,0);
@@ -166,7 +167,7 @@ public class TestHiveWriter {
     }
 
     private void writeTuples(HiveWriter writer, HiveMapper mapper, int count)
-            throws IOException, InterruptedException, StreamingException {
+            throws HiveWriter.WriteFailure, InterruptedException {
         Integer id = 100;
         String msg = "test-123";
         for (int i = 1; i <= count; i++) {

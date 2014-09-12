@@ -253,7 +253,7 @@
     (let [mock-port "42"
           mock-storm-id "fake-storm-id"
           mock-worker-id "fake-worker-id"
-          mock-cp "/base:/stormjar.jar"
+          mock-cp (str file-path-separator "base" class-path-separator file-path-separator "stormjar.jar")
           exp-args-fn (fn [opts topo-opts classpath]
                        (concat [(supervisor/java-cmd) "-server"]
                                opts
@@ -261,8 +261,8 @@
                                ["-Djava.library.path="
                                 (str "-Dlogfile.name=" mock-storm-id "-worker-" mock-port ".log")
                                 "-Dstorm.home="
-                                "-Dstorm.log.dir=/logs"
-                                "-Dlogback.configurationFile=/logback/cluster.xml"
+                                (str "-Dstorm.log.dir=" file-path-separator "logs")
+                                (str "-Dlogback.configurationFile=" file-path-separator "logback" file-path-separator "cluster.xml")
                                 (str "-Dstorm.id=" mock-storm-id)
                                 (str "-Dworker.id=" mock-worker-id)
                                 (str "-Dworker.port=" mock-port)
@@ -316,7 +316,7 @@
                                                 [0]
                                                 exp-args))))
       (testing "testing topology.classpath is added to classpath"
-        (let [topo-cp "/any/path"
+        (let [topo-cp (str file-path-separator "any" file-path-separator "path")
               exp-args (exp-args-fn [] [] (add-to-classpath mock-cp [topo-cp]))
               mock-supervisor {:conf {STORM-CLUSTER-MODE :distributed}}]
           (stubbing [read-supervisor-storm-conf {TOPOLOGY-CLASSPATH topo-cp}
@@ -325,7 +325,7 @@
                      set-worker-user! nil
                      supervisor/write-log-metadata! nil
                      launch-process nil
-                     current-classpath "/base"]
+                     current-classpath (str file-path-separator "base")]
                     (supervisor/launch-worker mock-supervisor
                                               mock-storm-id
                                               mock-port
@@ -344,7 +344,7 @@
                      launch-process nil
                      set-worker-user! nil
                      supervisor/write-log-metadata! nil
-                     current-classpath "/base"]
+                     current-classpath (str file-path-separator "base")]
                     (supervisor/launch-worker mock-supervisor
                                               mock-storm-id
                                               mock-port
@@ -365,12 +365,12 @@
           mock-storm-id "fake-storm-id"
           mock-worker-id "fake-worker-id"
           mock-cp "mock-classpath'quote-on-purpose"
-          storm-local (str "/tmp/" (UUID/randomUUID))
-          worker-script (str storm-local "/workers/" mock-worker-id "/storm-worker-script.sh")
-          exp-launch ["/bin/worker-launcher"
+          storm-local (str file-path-separator "tmp" file-path-separator (UUID/randomUUID))
+          worker-script (str storm-local file-path-separator "workers" file-path-separator mock-worker-id file-path-separator "storm-worker-script.sh")
+          exp-launch [(str file-path-separator "bin" file-path-separator "worker-launcher")
                       "me"
                       "worker"
-                      (str storm-local "/workers/" mock-worker-id)
+                      (str storm-local file-path-separator "workers" file-path-separator mock-worker-id)
                       worker-script]
           exp-script-fn (fn [opts topo-opts]
                        (str "#!/bin/bash\n'export' 'LD_LIBRARY_PATH=';\n\nexec 'java' '-server'"
@@ -379,8 +379,8 @@
                                 " '-Djava.library.path='"
                                 " '-Dlogfile.name=" mock-storm-id "-worker-" mock-port ".log'"
                                 " '-Dstorm.home='"
-                                " '-Dstorm.log.dir=/logs'"
-                                " '-Dlogback.configurationFile=/logback/cluster.xml'"
+                                " '-Dstorm.log.dir=" file-path-separator "logs'"
+                                " '-Dlogback.configurationFile=" file-path-separator "logback" file-path-separator "cluster.xml'"
                                 " '-Dstorm.id=" mock-storm-id "'"
                                 " '-Dworker.id=" mock-worker-id "'"
                                 " '-Dworker.port=" mock-port "'"

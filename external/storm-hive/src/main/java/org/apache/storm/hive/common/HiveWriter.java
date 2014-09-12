@@ -28,8 +28,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hive.hcatalog.streaming.*;
-
 import org.apache.storm.hive.bolt.mapper.HiveMapper;
 import backtype.storm.tuple.Tuple;
 
@@ -54,22 +54,31 @@ public class HiveWriter {
     protected boolean closed; // flag indicating HiveWriter was closed
     private boolean autoCreatePartitions;
     private boolean heartBeatNeeded = false;
+    private UserGroupInformation ugi;
 
     public HiveWriter(HiveEndPoint endPoint, int txnsPerBatch,
                       boolean autoCreatePartitions, long callTimeout,
-                      ExecutorService callTimeoutPool, HiveMapper mapper)
-        throws IOException, ClassNotFoundException, InterruptedException
-               , StreamingException {
-        this.autoCreatePartitions = autoCreatePartitions;
-        this.callTimeout = callTimeout;
-        this.callTimeoutPool = callTimeoutPool;
-        this.endPoint = endPoint;
-        this.connection = newConnection();
-        this.txnsPerBatch = txnsPerBatch;
-        this.recordWriter = mapper.createRecordWriter(endPoint);
-        this.txnBatch = nextTxnBatch(recordWriter);
-        this.closed = false;
-        this.lastUsed = System.currentTimeMillis();
+                      ExecutorService callTimeoutPool, HiveMapper mapper, UserGroupInformation ugi)
+        throws InterruptedException, ConnectFailure {
+        try {
+            this.autoCreatePartitions = autoCreatePartitions;
+            this.callTimeout = callTimeout;
+            this.callTimeoutPool = callTimeoutPool;
+            this.endPoint = endPoint;
+            this.ugi = ugi;
+            this.connection = newConnection(ugi);
+            this.txnsPerBatch = txnsPerBatch;
+            this.recordWriter = mapper.createRecordWriter(endPoint);
+            this.txnBatch = nextTxnBatch(recordWriter);
+            this.closed = false;
+            this.lastUsed = System.currentTimeMillis();
+        } catch(InterruptedException e) {
+            throw e;
+        } catch(RuntimeException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new ConnectFailure(endPoint, e);
+        }
     }
 
     @Override
@@ -88,8 +97,7 @@ public class HiveWriter {
      * @throws InterruptedException
      */
     public synchronized void write(final byte[] record)
-        throws IOException, InterruptedException, StreamingException {
-        checkAndThrowInterruptedException();
+        throws WriteFailure, InterruptedException {
         if (closed) {
             throw new IllegalStateException("This hive streaming writer was closed " +
                                             "and thus no longer able to write : " + endPoint);
@@ -99,16 +107,15 @@ public class HiveWriter {
             LOG.debug("Writing event to {}", endPoint);
             callWithTimeout(new CallRunner<Void>() {
                     @Override
-                        public Void call() throws Exception {
+                    public Void call() throws StreamingException, InterruptedException {
                         txnBatch.write(record);
                         return null;
                     }
                 });
-        } catch (Exception e) {
-            LOG.warn("Failed writing to EndPoint : " + endPoint
-                     + ". TxnID : " + txnBatch.getCurrentTxnId()
-                     + ". Closing Transaction Batch and rethrowing exception.");
-            throw new IOException("Write to hive endpoint failed: " + endPoint, e);
+        } catch(StreamingException e) {
+            throw new WriteFailure(endPoint, txnBatch.getCurrentTxnId(), e);
+        } catch(TimeoutException e) {
+            throw new WriteFailure(endPoint, txnBatch.getCurrentTxnId(), e);
         }
     }
 
@@ -119,23 +126,27 @@ public class HiveWriter {
      * TODO: see what to do when there are errors in each IO call stage
      */
     public void flush(boolean rollToNext)
-        throws IOException, InterruptedException, StreamingException {
+        throws CommitFailure, TxnBatchFailure, TxnFailure, InterruptedException {
         if(heartBeatNeeded) {
             heartBeatNeeded = false;
             heartBeat();
         }
         lastUsed = System.currentTimeMillis();
-        commitTxn();
-        if(txnBatch.remainingTransactions() == 0) {
-            closeTxnBatch();
-            txnBatch = null;
-            if(rollToNext) {
-                txnBatch = nextTxnBatch(recordWriter);
+        try {
+            commitTxn();
+            if(txnBatch.remainingTransactions() == 0) {
+                closeTxnBatch();
+                txnBatch = null;
+                if(rollToNext) {
+                    txnBatch = nextTxnBatch(recordWriter);
+                }
             }
-        }
-        if(rollToNext) {
-            LOG.debug("Switching to next Txn for {}", endPoint);
-            txnBatch.beginNextTransaction(); // does not block
+            if(rollToNext) {
+                LOG.debug("Switching to next Txn for {}", endPoint);
+                txnBatch.beginNextTransaction(); // does not block
+            }
+        } catch(StreamingException e) {
+            throw new TxnFailure(txnBatch, e);
         }
     }
 
@@ -157,8 +168,11 @@ public class HiveWriter {
                         return null;
                     }
                 });
-        } catch (IOException e) {
-            LOG.warn("I/O error during heartbeat on batch " + txnBatch, e);
+        } catch (InterruptedException e) {
+            throw e;
+        } catch (Exception e) {
+            LOG.warn("Unable to send heartbeat on Txn Batch " + txnBatch, e);
+            // Suppressing exceptions as we don't care for errors on heartbeats
         }
     }
 
@@ -173,42 +187,61 @@ public class HiveWriter {
         closed = true;
     }
 
-    private void closeConnection() throws IOException, InterruptedException {
+    private void closeConnection() throws InterruptedException {
         LOG.info("Closing connection to end point : {}", endPoint);
-        callWithTimeout(new CallRunner<Void>() {
-                @Override
+        try {
+            callWithTimeout(new CallRunner<Void>() {
+                    @Override
                     public Void call() throws Exception {
-                    connection.close(); // could block
-                    return null;
-                }
-            });
+                        connection.close(); // could block
+                        return null;
+                    }
+                });
+        } catch(Exception e) {
+            LOG.warn("Error closing connection to EndPoint : " + endPoint, e);
+            // Suppressing exceptions as we don't care for errors on connection close
+        }
     }
 
-    private void commitTxn() throws IOException, InterruptedException {
+    private void commitTxn() throws CommitFailure, InterruptedException {
         LOG.debug("Committing Txn id {} to {}", txnBatch.getCurrentTxnId() , endPoint);
-        callWithTimeout(new CallRunner<Void>() {
-                @Override
+        try {
+            callWithTimeout(new CallRunner<Void>() {
+                    @Override
                     public Void call() throws Exception {
-                    txnBatch.commit(); // could block
-                    return null;
-                }
-            });
+                        txnBatch.commit(); // could block
+                        return null;
+                    }
+                });
+        } catch (StreamingException e) {
+            throw new CommitFailure(endPoint, txnBatch.getCurrentTxnId(), e);
+        } catch (TimeoutException e) {
+            throw new CommitFailure(endPoint, txnBatch.getCurrentTxnId(), e);
+        }
     }
 
-    private StreamingConnection newConnection()
-        throws IOException, InterruptedException {
-        return  callWithTimeout(new CallRunner<StreamingConnection>() {
-                @Override
+    private StreamingConnection newConnection(final UserGroupInformation ugi)
+        throws InterruptedException, ConnectFailure {
+        try {
+            return  callWithTimeout(new CallRunner<StreamingConnection>() {
+                    @Override
                     public StreamingConnection call() throws Exception {
-                    return endPoint.newConnection(autoCreatePartitions); // could block
-                }
-            });
+                        return endPoint.newConnection(autoCreatePartitions, null, ugi); // could block
+                    }
+                });
+        } catch(StreamingException e) {
+            throw new ConnectFailure(endPoint, e);
+        } catch(TimeoutException e) {
+            throw new ConnectFailure(endPoint, e);
+        }
     }
 
     private TransactionBatch nextTxnBatch(final RecordWriter recordWriter)
-        throws IOException, InterruptedException, StreamingException {
+        throws InterruptedException, TxnBatchFailure {
         LOG.debug("Fetching new Txn Batch for {}", endPoint);
-        TransactionBatch batch = callWithTimeout(new CallRunner<TransactionBatch>() {
+        TransactionBatch batch = null;
+        try {
+            batch = callWithTimeout(new CallRunner<TransactionBatch>() {
                 @Override
                 public TransactionBatch call() throws Exception {
                     return connection.fetchTransactionBatch(txnsPerBatch, recordWriter); // could block
@@ -216,20 +249,31 @@ public class HiveWriter {
             });
         LOG.debug("Acquired {}. Switching to first txn", batch);
         batch.beginNextTransaction();
+        } catch(TimeoutException e) {
+            throw new TxnBatchFailure(endPoint, e);
+        } catch(StreamingException e) {
+            throw new TxnBatchFailure(endPoint, e);
+        }
         return batch;
     }
 
-    private void closeTxnBatch() throws IOException, InterruptedException {
-        LOG.debug("Closing Txn Batch {}", txnBatch);
-        callWithTimeout(new CallRunner<Void>() {
-                @Override
-                    public Void call() throws Exception {
-                    if(txnBatch != null) {
-                        txnBatch.close(); // could block
+    private void closeTxnBatch() throws  InterruptedException {
+        try {
+            LOG.debug("Closing Txn Batch {}", txnBatch);
+            callWithTimeout(new CallRunner<Void>() {
+                    @Override
+                        public Void call() throws Exception {
+                        if(txnBatch != null) {
+                            txnBatch.close(); // could block
+                        }
+                        return null;
                     }
-                    return null;
-                }
-            });
+                });
+        } catch(InterruptedException e) {
+            throw e;
+        } catch(Exception e) {
+            LOG.warn("Error closing txn batch "+ txnBatch, e);
+        }
     }
 
     /**
@@ -252,7 +296,7 @@ public class HiveWriter {
      * cancel the callable and throw an IOException
      */
     private <T> T callWithTimeout(final CallRunner<T> callRunner)
-        throws IOException, InterruptedException {
+        throws TimeoutException, StreamingException, InterruptedException {
         Future<T> future = callTimeoutPool.submit(new Callable<T>() {
                 @Override
                 public T call() throws Exception {
@@ -267,28 +311,22 @@ public class HiveWriter {
             }
         } catch (TimeoutException eT) {
             future.cancel(true);
-            throw new IOException("Callable timed out after " + callTimeout + " ms" +
-                                  " on EndPoint: " + endPoint,
-                                  eT);
+            throw eT;
         } catch (ExecutionException e1) {
             Throwable cause = e1.getCause();
             if (cause instanceof IOException) {
-                throw (IOException) cause;
+                throw new StreamingIOFailure("I/O Failure", (IOException) cause);
+            } else if (cause instanceof StreamingException) {
+                throw (StreamingException) cause;
             } else if (cause instanceof InterruptedException) {
                 throw (InterruptedException) cause;
             } else if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;
-            } else if (cause instanceof Error) {
-                throw (Error)cause;
+            } else if (cause instanceof TimeoutException) {
+                throw new StreamingException("Operation Timed Out.", (TimeoutException) cause);
             } else {
                 throw new RuntimeException(e1);
             }
-        } catch (CancellationException ce) {
-            throw new InterruptedException(
-                                           "Blocked callable interrupted by rotation event");
-        } catch (InterruptedException ex) {
-            LOG.warn("Unexpected Exception " + ex.getMessage(), ex);
-            throw ex;
         }
     }
 
@@ -315,4 +353,39 @@ public class HiveWriter {
         T call() throws Exception;
     }
 
+    public static class Failure extends Exception {
+        public Failure(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    public static class WriteFailure extends Failure {
+        public WriteFailure(HiveEndPoint endPoint, Long currentTxnId, Throwable cause) {
+            super("Failed writing to : " + endPoint + ". TxnID : " + currentTxnId, cause);
+        }
+    }
+
+    public static class CommitFailure extends Failure {
+        public CommitFailure(HiveEndPoint endPoint, Long txnID, Throwable cause) {
+            super("Commit of Txn " + txnID + " failed on EndPoint: " + endPoint, cause);
+        }
+    }
+
+    public static class ConnectFailure extends Failure {
+        public ConnectFailure(HiveEndPoint ep, Throwable cause) {
+            super("Failed connecting to EndPoint " + ep, cause);
+        }
+    }
+
+    public static class TxnBatchFailure extends Failure {
+        public TxnBatchFailure(HiveEndPoint ep, Throwable cause) {
+            super("Failed acquiring Transaction Batch from EndPoint: " + ep, cause);
+        }
+    }
+
+    public static class TxnFailure extends Failure {
+        public TxnFailure(TransactionBatch txnBatch, Throwable cause) {
+            super("Failed switching to next Txn in TxnBatch " + txnBatch, cause);
+        }
+    }
 }

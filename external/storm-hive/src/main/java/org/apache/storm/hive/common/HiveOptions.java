@@ -18,9 +18,6 @@
 
 package org.apache.storm.hive.common;
 
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.io.IOException;
 import java.io.Serializable;
 
 import org.apache.storm.hive.common.HiveWriter;
@@ -40,6 +37,8 @@ public class HiveOptions implements Serializable {
     protected Integer callTimeout = 10000;
     protected Integer heartBeatInterval = 240;
     protected Boolean autoCreatePartitions = true;
+    protected String kerberosPrincipal;
+    protected String kerberosKeytab;
 
     public HiveOptions(String metaStoreURI,String databaseName,String tableName,HiveMapper mapper) {
         this.metaStoreURI = metaStoreURI;
@@ -83,6 +82,28 @@ public class HiveOptions implements Serializable {
         return this;
     }
 
+    public HiveOptions withKerberosKeytab(String kerberosKeytab) {
+        this.kerberosKeytab = kerberosKeytab;
+        return this;
+    }
+
+    public HiveOptions withKerberosPrincipal(String kerberosPrincipal) {
+        this.kerberosPrincipal = kerberosPrincipal;
+        return this;
+    }
+
+    public String getMetaStoreURI() {
+        return metaStoreURI;
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
+    }
+
+    public String getTableName() {
+        return tableName;
+    }
+
     public HiveMapper getMapper() {
         return mapper;
     }
@@ -107,17 +128,19 @@ public class HiveOptions implements Serializable {
         return idleTimeout;
     }
 
-    public HiveEndPoint makeEndPoint(List<String> partitionVals) throws ConnectionError {
-        if(partitionVals==null) {
-            return new HiveEndPoint(metaStoreURI, databaseName, tableName, null);
-        }
-        return new HiveEndPoint(metaStoreURI, databaseName, tableName, partitionVals);
+    public Integer getTxnsPerBatch() {
+        return txnsPerBatch;
     }
 
-    public HiveWriter makeHiveWriter(HiveEndPoint endPoint, ExecutorService callTimeoutPool)
-        throws IOException, InterruptedException, ClassNotFoundException, StreamingException {
-        return new HiveWriter(endPoint, txnsPerBatch, autoCreatePartitions,
-                              callTimeout, callTimeoutPool, mapper);
+    public Boolean getAutoCreatePartitions() {
+        return autoCreatePartitions;
     }
 
+    public String getKerberosPrincipal() {
+        return kerberosPrincipal;
+    }
+
+    public String getKerberosKeytab() {
+        return kerberosKeytab;
+    }
 }

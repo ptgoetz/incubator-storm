@@ -159,12 +159,13 @@
         <module>storm-core</module>
         <module>examples/storm-starter</module>
         <module>external/storm-kafka</module>
-		<module>external/storm-kafka-example</module>
+	<module>external/storm-kafka-example</module>
         <module>external/storm-hdfs</module>
-		<module>external/storm-hbase</module>
-		<module>external/storm-cassandra</module>
-		<module>external/storm-jms</module>
-		<module>external/storm-rest</module>
+	<module>external/storm-hbase</module>
+	<module>external/storm-cassandra</module>
+	<module>external/storm-jms</module>
+	<module>external/storm-rest</module>
+        <module>external/storm-hive</module>
     </modules>
 
     <scm>
@@ -212,12 +213,14 @@
         <mockito.version>1.9.5</mockito.version>
         <reply.version>0.3.0</reply.version>
         <conjure.version>2.1.3</conjure.version>
-        <zookeeper.version>3.4.6</zookeeper.version>
         <clojure-data-codec.version>0.1.0</clojure-data-codec.version>
         <clojure-contrib.version>1.2.0</clojure-contrib.version>
         <zookeeper.version>3.4.6</zookeeper.version>
 	<junit.version>3.8.1</junit.version>
-
+        <hbase.version>0.96.1.1-hadoop2</hbase.version>
+        <hive.version>0.14.0.2.2.0.0-655</hive.version>
+        <hadoop.version>2.6.0.2.2.0.0-658</hadoop.version>
+        <kafka.version>0.8.1.1</kafka.version>
     </properties>
 
     <profiles>
@@ -411,7 +414,7 @@
                    <exclusion>
                     	<groupId>org.apache.zookeeper</groupId>
                     	<artifactId>zookeeper</artifactId>
-                </exclusion> 
+                </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -612,7 +615,7 @@
         </repository>
         <repository>
        		<id>hortonworks.repo</id>
-       		<url>http://repo.hortonworks.com/content/repositories/releases</url>
+       		<url>http://54.235.92.15/nexus/content/groups/public/</url>
        		<name>Hortonworks Repo</name>
        		<releases>
           		<enabled>true</enabled>
