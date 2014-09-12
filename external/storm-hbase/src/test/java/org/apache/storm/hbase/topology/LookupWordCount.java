@@ -17,25 +17,23 @@
  */
 package org.apache.storm.hbase.topology;
 
-import org.apache.storm.hbase.bolt.HBaseBolt;
-import org.apache.storm.hbase.bolt.mapper.SimpleHBaseMapper;
-import org.apache.storm.hbase.security.HBaseSecurityUtil;
-
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
+import org.apache.storm.hbase.bolt.HBaseLookupBolt;
+import org.apache.storm.hbase.bolt.mapper.HBaseProjectionCriteria;
+import org.apache.storm.hbase.bolt.mapper.SimpleHBaseMapper;
 
 import java.util.HashMap;
 import java.util.Map;
 
 
-public class PersistentWordCount {
+public class LookupWordCount {
     private static final String WORD_SPOUT = "WORD_SPOUT";
-    private static final String COUNT_BOLT = "COUNT_BOLT";
-    private static final String HBASE_BOLT = "HBASE_BOLT";
-
+    private static final String LOOKUP_BOLT = "LOOKUP_BOLT";
+    private static final String TOTAL_COUNT_BOLT = "TOTAL_COUNT_BOLT";
 
     public static void main(String[] args) throws Exception {
         Config config = new Config();
@@ -47,25 +45,23 @@ public class PersistentWordCount {
         config.put("hbase.conf", hbConf);
 
         WordSpout spout = new WordSpout();
-        WordCounter bolt = new WordCounter();
+        TotalWordCounter totalBolt = new TotalWordCounter();
 
-        SimpleHBaseMapper mapper = new SimpleHBaseMapper()
-                .withRowKeyField("word")
-                .withColumnFields(new Fields("word"))
-                .withCounterFields(new Fields("count"))
-                .withColumnFamily("cf");
+        SimpleHBaseMapper mapper = new SimpleHBaseMapper().withRowKeyField("word");
+        HBaseProjectionCriteria projectionCriteria = new HBaseProjectionCriteria();
+        projectionCriteria.addColumn(new HBaseProjectionCriteria.ColumnMetaData("cf", "count"));
 
-        HBaseBolt hbase = new HBaseBolt("WordCount", mapper)
-                .withConfigKey("hbase.conf");
+        WordCountValueMapper rowToTupleMapper = new WordCountValueMapper();
 
+        HBaseLookupBolt hBaseLookupBolt = new HBaseLookupBolt("WordCount", mapper, rowToTupleMapper)
+                .withConfigKey("hbase.conf")
+                .withProjectionCriteria(projectionCriteria);
 
-        // wordSpout ==> countBolt ==> HBaseBolt
+        //wordspout -> lookupbolt -> totalCountBolt
         TopologyBuilder builder = new TopologyBuilder();
-
         builder.setSpout(WORD_SPOUT, spout, 1);
-        builder.setBolt(COUNT_BOLT, bolt, 1).shuffleGrouping(WORD_SPOUT);
-        builder.setBolt(HBASE_BOLT, hbase, 1).fieldsGrouping(COUNT_BOLT, new Fields("word"));
-
+        builder.setBolt(LOOKUP_BOLT, hBaseLookupBolt, 1).shuffleGrouping(WORD_SPOUT);
+        builder.setBolt(TOTAL_COUNT_BOLT, totalBolt, 1).fieldsGrouping(LOOKUP_BOLT, new Fields("columnName"));
 
         if (args.length == 1) {
             LocalCluster cluster = new LocalCluster();
@@ -76,15 +72,8 @@ public class PersistentWordCount {
             System.exit(0);
         } else if (args.length == 2) {
             StormSubmitter.submitTopology(args[1], config, builder.createTopology());
-        } else if (args.length == 4) {
-            System.out.println("hdfs url: " + args[0] + ", keytab file: " + args[2] + 
-                ", principal name: " + args[3] + ", toplogy name: " + args[1]);
-            config.put(HBaseSecurityUtil.STORM_KEYTAB_FILE_KEY, args[2]);
-            config.put(HBaseSecurityUtil.STORM_USER_NAME_KEY, args[3]);
-            config.setNumWorkers(3);
-            StormSubmitter.submitTopology(args[1], config, builder.createTopology());
-        } else {
-            System.out.println("Usage: PersistentWordCount <hbase.rootdir> [topology name] [keytab file] [principal name]");
+        } else{
+            System.out.println("Usage: LookupWordCount <hbase.rootdir>");
         }
     }
 }

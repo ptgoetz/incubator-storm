@@ -17,13 +17,13 @@
  */
 package org.apache.storm.hbase.security;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.util.Map;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.security.UserProvider;
 import org.apache.hadoop.security.UserGroupInformation;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.util.Map;
 
 /**
  * This class provides util methods for storm-hbase connector communicating

@@ -15,34 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.storm.hbase.bolt.mapper;
+package org.apache.storm.hbase.trident.state;
 
+import backtype.storm.task.IMetricsContext;
+import storm.trident.state.State;
+import storm.trident.state.StateFactory;
 
-import backtype.storm.tuple.Tuple;
-import org.apache.storm.hbase.common.ColumnList;
+import java.util.Map;
 
-import java.io.Serializable;
+public class HBaseStateFactory implements StateFactory {
 
-/**
- * Maps a <code>backtype.storm.tuple.Tuple</code> object
- * to a row in an HBase table.
- */
-public interface HBaseMapper extends Serializable {
+    private HBaseState.Options options;
 
-    /**
-     * Given a tuple, return the HBase rowkey.
-     *
-     * @param tuple
-     * @return
-     */
-    byte[] rowKey(Tuple tuple);
+    public HBaseStateFactory(HBaseState.Options options) {
+        this.options = options;
+    }
 
-    /**
-     * Given a tuple, return a list of HBase columns to insert.
-     *
-     * @param tuple
-     * @return
-     */
-    ColumnList columns(Tuple tuple);
-
+    @Override
+    public State makeState(Map map, IMetricsContext iMetricsContext, int partitionIndex, int numPartitions) {
+        HBaseState state = new HBaseState(map , partitionIndex, numPartitions, options);
+        state.prepare();
+        return state;
+    }
 }

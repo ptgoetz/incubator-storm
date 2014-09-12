@@ -15,34 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.storm.hbase.bolt.mapper;
+package org.apache.storm.hbase.trident;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import storm.trident.operation.BaseFunction;
+import storm.trident.operation.TridentCollector;
+import storm.trident.tuple.TridentTuple;
 
-import backtype.storm.tuple.Tuple;
-import org.apache.storm.hbase.common.ColumnList;
+import java.util.Random;
 
-import java.io.Serializable;
+public class PrintFunction extends BaseFunction {
 
-/**
- * Maps a <code>backtype.storm.tuple.Tuple</code> object
- * to a row in an HBase table.
- */
-public interface HBaseMapper extends Serializable {
+    private static final Logger LOG = LoggerFactory.getLogger(PrintFunction.class);
 
-    /**
-     * Given a tuple, return the HBase rowkey.
-     *
-     * @param tuple
-     * @return
-     */
-    byte[] rowKey(Tuple tuple);
+    private static final Random RANDOM = new Random();
 
-    /**
-     * Given a tuple, return a list of HBase columns to insert.
-     *
-     * @param tuple
-     * @return
-     */
-    ColumnList columns(Tuple tuple);
-
+    @Override
+    public void execute(TridentTuple tuple, TridentCollector tridentCollector) {
+        if(RANDOM.nextInt(1000) > 995) {
+            LOG.info(tuple.toString());
+        }
+    }
 }

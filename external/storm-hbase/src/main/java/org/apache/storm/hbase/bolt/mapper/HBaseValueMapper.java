@@ -17,32 +17,25 @@
  */
 package org.apache.storm.hbase.bolt.mapper;
 
-
-import backtype.storm.tuple.Tuple;
-import org.apache.storm.hbase.common.ColumnList;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.tuple.Values;
+import org.apache.hadoop.hbase.client.Result;
 
 import java.io.Serializable;
+import java.util.List;
 
-/**
- * Maps a <code>backtype.storm.tuple.Tuple</code> object
- * to a row in an HBase table.
- */
-public interface HBaseMapper extends Serializable {
+public interface HBaseValueMapper extends Serializable {
+    /**
+     *
+     * @param result HBase lookup result instance.
+     * @return list of values that should be emitted by the lookup bolt.
+     * @throws Exception
+     */
+    public List<Values> toValues(Result result) throws Exception;
 
     /**
-     * Given a tuple, return the HBase rowkey.
-     *
-     * @param tuple
-     * @return
+     * declares the output fields for the lookup bolt.
+     * @param declarer
      */
-    byte[] rowKey(Tuple tuple);
-
-    /**
-     * Given a tuple, return a list of HBase columns to insert.
-     *
-     * @param tuple
-     * @return
-     */
-    ColumnList columns(Tuple tuple);
-
+    void declareOutputFields(OutputFieldsDeclarer declarer);
 }

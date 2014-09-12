@@ -15,34 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.storm.hbase.bolt.mapper;
+package org.apache.storm.hbase.trident.state;
 
+import storm.trident.operation.TridentCollector;
+import storm.trident.state.BaseStateUpdater;
+import storm.trident.tuple.TridentTuple;
 
-import backtype.storm.tuple.Tuple;
-import org.apache.storm.hbase.common.ColumnList;
+import java.util.List;
 
-import java.io.Serializable;
+public class HBaseUpdater extends BaseStateUpdater<HBaseState>  {
 
-/**
- * Maps a <code>backtype.storm.tuple.Tuple</code> object
- * to a row in an HBase table.
- */
-public interface HBaseMapper extends Serializable {
-
-    /**
-     * Given a tuple, return the HBase rowkey.
-     *
-     * @param tuple
-     * @return
-     */
-    byte[] rowKey(Tuple tuple);
-
-    /**
-     * Given a tuple, return a list of HBase columns to insert.
-     *
-     * @param tuple
-     * @return
-     */
-    ColumnList columns(Tuple tuple);
-
+    @Override
+    public void updateState(HBaseState hBaseState, List<TridentTuple> tuples, TridentCollector collector) {
+        hBaseState.updateState(tuples, collector);
+    }
 }

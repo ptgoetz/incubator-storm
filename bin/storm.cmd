@@ -202,6 +202,18 @@
   type %STORM_HOME%\RELEASE
   goto :eof
 
+:makeServiceXml
+  set arguments=%*
+  @echo ^<service^>
+  @echo   ^<id^>%storm-command%^</id^>
+  @echo   ^<name^>%storm-command%^</name^>
+  @echo   ^<description^>This service runs Storm %storm-command%^</description^>
+  @echo   ^<executable^>%JAVA%^</executable^>
+  @echo   ^<arguments^>%arguments%^</arguments^>
+  @echo ^</service^>
+  goto :eof
+
+
 :make_command_arguments
   if "%2" == "" goto :eof
   set _count=0
