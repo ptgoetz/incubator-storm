@@ -48,23 +48,24 @@ def get_storm_config_json(appname):
     all_args = [
         "slider",
         "registry",
-        "--getconf storm-site", 
-        "--name "+appname, 
-        "--format json", 
+        "--getconf storm-site",
+        "--name "+appname,
+        "--format json",
         "--dest "+STORM_TEMP_JSON_FILE]
     os.spawnvp(os.P_WAIT,SLIDER_REGISTRY_CMD, all_args)
     if not os.path.exists(STORM_TEMP_JSON_FILE):
-        print "Unable to read slider deployed storm config"
+        print "Failed to read slider deployed storm config"
         sys.exit(1)
 
 def storm_cmd_args(args):
     file = open(STORM_TEMP_JSON_FILE,"r")
     data = json.load(file)
     args.insert(0, "storm")
-    args.extend(["-c nimbus.host="+data["nimbus.host"], 
+    args.extend(["-c nimbus.host="+data["nimbus.host"],
                  "-c nimbus.thrift.port="+data["nimbus.thrift.port"]])
+    os.remove(STORM_TEMP_JSON_FILE)
     return args
-                
+
 def main():
     if len(sys.argv) < 2:
         print "Please provide yarn appName followed by storm command."
