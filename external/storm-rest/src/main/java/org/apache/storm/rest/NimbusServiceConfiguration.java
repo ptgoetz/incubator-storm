@@ -21,6 +21,9 @@ public class NimbusServiceConfiguration extends Configuration {
     private int nimbusPort;
 
     @JsonProperty
+    private String stormThriftTransport;
+
+    @JsonProperty
     private boolean enableGanglia = false;
 
     @Valid
@@ -35,6 +38,10 @@ public class NimbusServiceConfiguration extends Configuration {
 
     public String getNimbusHost(){
         return this.nimbusHost;
+    }
+
+    public String getStormThriftTransport() {
+        return this.stormThriftTransport;
     }
 
     public boolean isEnableGanglia(){

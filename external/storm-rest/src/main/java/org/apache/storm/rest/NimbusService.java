@@ -32,11 +32,18 @@ public class NimbusService extends Service<NimbusServiceConfiguration> {
         LOG.info("Ganglia reporting enabled: {}", config.isEnableGanglia());
         ObjectMapperFactory factory = environment.getObjectMapperFactory();
         factory.enable(SerializationFeature.INDENT_OUTPUT);
-
         Map<String, Object> conf = new HashMap<String, Object>();
         conf.put(Config.NIMBUS_HOST, config.getNimbusHost());
         conf.put(Config.NIMBUS_THRIFT_PORT, config.getNimbusPort());
-        conf.put("storm.thrift.transport", "backtype.storm.security.auth.SimpleTransportPlugin");
+
+        if (config.getStormThriftTransport() != null) {
+            conf.put(Config.STORM_THRIFT_TRANSPORT_PLUGIN, config.getStormThriftTransport());
+        } else {
+            conf.put(Config.STORM_THRIFT_TRANSPORT_PLUGIN, "backtype.storm.security.auth.SimpleTransportPlugin");
+        }
+        conf.put(Config.STORM_NIMBUS_RETRY_TIMES, 5);
+        conf.put(Config.STORM_NIMBUS_RETRY_INTERVAL,2000);
+        conf.put(Config.STORM_NIMBUS_RETRY_INTERVAL_CEILING, 60000);
 
         NimbusClient nc = NimbusClient.getConfiguredClient(conf);
         environment.addResource(new NimbusResource(nc.getClient()));
