@@ -98,6 +98,7 @@ if "%1" == "--service" (
   ) else (
     call %JAVA% %java_arguments%
   )
+  exit /b %ERRORLEVEL%
   goto :eof
 
 :activate
