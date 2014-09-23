@@ -21,6 +21,8 @@ import sys
 import random
 import subprocess as sub
 import re
+import shlex
+
 
 def identity(x):
     return x
@@ -45,7 +47,7 @@ if (not os.path.isfile(USER_CONF_DIR + "/storm.yaml")):
     USER_CONF_DIR = CLUSTER_CONF_DIR
 CONFIG_OPTS = []
 CONFFILE = ""
-JAR_JVM_OPTS = os.getenv('STORM_JAR_JVM_OPTS', '')
+JAR_JVM_OPTS = shlex.split(os.getenv('STORM_JAR_JVM_OPTS', ''))
 JAVA_HOME = os.getenv('JAVA_HOME', None)
 JAVA_CMD= 'java' if not JAVA_HOME else os.path.join(JAVA_HOME, 'bin', 'java')
 
@@ -162,7 +164,7 @@ def jar(jarfile, klass, *args):
         jvmtype="-client",
         extrajars=[jarfile, USER_CONF_DIR, STORM_DIR + "/bin"],
         args=args,
-        jvmopts=[' '.join(filter(None, [JAR_JVM_OPTS, "-Dstorm.jar=" + jarfile]))])
+        jvmopts=JAR_JVM_OPTS + ["-Dstorm.jar=" + jarfile])
 
 def kill(*args):
     """Syntax: [storm kill topology-name [-w wait-time-secs]]
