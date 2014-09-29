@@ -836,6 +836,13 @@ public class Config extends HashMap<String, Object> {
     public static final Object TOPOLOGY_USERS_SCHEMA = ConfigValidation.StringsValidator;
 
     /**
+     * A list of groups that are allowed to interact with the topology.  To use this set
+     * nimbus.authorizer to backtype.storm.security.auth.authorizer.SimpleACLAuthorizer
+     */
+    public static final String TOPOLOGY_GROUPS = "topology.groups";
+    public static final Object TOPOLOGY_GROUPS_SCHEMA = ConfigValidation.StringsValidator;
+
+    /**
      * True if Storm should timeout messages or not. Defaults to true. This is meant to be used
      * in unit tests to prevent tuples from being accidentally timed out during the test.
      */
