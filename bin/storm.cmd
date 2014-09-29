@@ -35,6 +35,8 @@
 @rem
 
 @rem if running as a service, log to (daily rolling) files instead of console
+set script_path=%~dp0
+
 if "%1" == "--service" (
   if not defined HADOOP_ROOT_LOGGER (
     set STORM_ROOT_LOGGER=INFO,DRFA
@@ -46,7 +48,7 @@ if "%1" == "--service" (
 :main
   setlocal enabledelayedexpansion
 
-  call %~dp0storm-config.cmd
+  call %script_path%storm-config.cmd
 
   set storm-command=%1
   if not defined storm-command (
