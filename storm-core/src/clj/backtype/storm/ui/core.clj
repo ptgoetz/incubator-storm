@@ -33,6 +33,7 @@
   (:import [backtype.storm.security.auth AuthUtils ReqContext])
   (:import [backtype.storm.generated AuthorizationException])
   (:import [backtype.storm.security.auth AuthUtils])
+  (:import [backtype.storm.metric GangliaReporter])
   (:import [java.io File])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
@@ -959,6 +960,8 @@
   (handler/site (-> main-routes
                     (wrap-reload '[backtype.storm.ui.core])
                     catch-errors)))
+
+(def gagnlia-reporter (GangliaReporter. *STORM-CONF*))
 
 (defn start-server!
   []
