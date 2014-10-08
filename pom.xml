@@ -157,15 +157,15 @@
     <modules>
         <module>storm-buildtools/maven-shade-clojure-transformer</module>
         <module>storm-core</module>
-        <module>contrib/storm-starter</module>
-        <module>contrib/storm-kafka</module>
-	<module>contrib/storm-kafka-example</module>
-        <module>contrib/storm-hdfs</module>
-	<module>contrib/storm-hbase</module>
-	<module>contrib/storm-cassandra</module>
-	<module>contrib/storm-jms</module>
-	<module>contrib/storm-rest</module>
-        <module>contrib/storm-hive</module>
+        <module>examples/storm-starter</module>
+        <module>external/storm-kafka</module>
+	<module>external/storm-kafka-example</module>
+        <module>external/storm-hdfs</module>
+	<module>external/storm-hbase</module>
+	<module>external/storm-cassandra</module>
+	<module>external/storm-jms</module>
+	<module>external/storm-rest</module>
+        <module>external/storm-hive</module>
     </modules>
 
     <scm>
