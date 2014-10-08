@@ -62,37 +62,37 @@
 
         <!-- EXTERNAL -->
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-kafka/target</directory>
-            <outputDirectory>external/storm-kafka</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-kafka/target</directory>
+            <outputDirectory>contrib/storm-kafka</outputDirectory>
             <includes>
                 <include>storm*jar</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-kafka</directory>
-            <outputDirectory>external/storm-kafka</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-kafka</directory>
+            <outputDirectory>contrib/storm-kafka</outputDirectory>
             <includes>
                 <include>README.*</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-hdfs/target</directory>
-            <outputDirectory>external/storm-hdfs</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-hdfs/target</directory>
+            <outputDirectory>contrib/storm-hdfs</outputDirectory>
             <includes>
                 <include>storm*jar</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-hdfs</directory>
-            <outputDirectory>external/storm-hdfs</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-hdfs</directory>
+            <outputDirectory>contrib/storm-hdfs</outputDirectory>
             <includes>
                 <include>README.*</include>
             </includes>
         </fileSet>
 
        <fileSet>
-           <directory>${project.basedir}/../../examples/storm-starter/target</directory>
-           <outputDirectory>examples/storm-starter</outputDirectory>
+           <directory>${project.basedir}/../../contrib/storm-starter/target</directory>
+           <outputDirectory>contrib/storm-starter</outputDirectory>
            <includes>
                 <include>storm*jar-with-dependencies.jar</include>
                <include>storm*-sources.jar</include>
@@ -100,136 +100,136 @@
            </includes>
        </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../../examples/storm-starter</directory>
-            <outputDirectory>examples/storm-starter</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-starter</directory>
+            <outputDirectory>contrib/storm-starter</outputDirectory>
             <includes>
                 <include>README.*</include>
             </includes>
         </fileSet>
 
        <fileSet>
-           <directory>${project.basedir}/../../external/storm-cassandra/target</directory>
-           <outputDirectory>external/storm-cassandra</outputDirectory>
+           <directory>${project.basedir}/../../contrib/storm-cassandra/target</directory>
+           <outputDirectory>contrib/storm-cassandra</outputDirectory>
            <includes>
                 <include>storm*jar</include>
            </includes>
        </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-cassandra</directory>
-            <outputDirectory>external/storm-cassandra</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-cassandra</directory>
+            <outputDirectory>contrib/storm-cassandra</outputDirectory>
             <includes>
                 <include>README.*</include>
             </includes>
         </fileSet>
 
        <fileSet>
-           <directory>${project.basedir}/../../external/storm-jms/target</directory>
-           <outputDirectory>external/storm-jms</outputDirectory>
+           <directory>${project.basedir}/../../contrib/storm-jms/target</directory>
+           <outputDirectory>contrib/storm-jms</outputDirectory>
            <includes>
                 <include>storm*jar</include>
            </includes>
        </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-jms</directory>
-            <outputDirectory>external/storm-jms</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-jms</directory>
+            <outputDirectory>contrib/storm-jms</outputDirectory>
             <includes>
                 <include>README.*</include>
             </includes>
         </fileSet>
 
        <fileSet>
-           <directory>${project.basedir}/../../external/storm-kafka/target</directory>
-           <outputDirectory>external/storm-kafka</outputDirectory>
+           <directory>${project.basedir}/../../contrib/storm-kafka/target</directory>
+           <outputDirectory>contrib/storm-kafka</outputDirectory>
            <includes>
                 <include>storm*jar</include>
            </includes>
        </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-kafka</directory>
-            <outputDirectory>external/storm-kafka</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-kafka</directory>
+            <outputDirectory>contrib/storm-kafka</outputDirectory>
             <includes>
                 <include>README.*</include>
             </includes>
         </fileSet>
 
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-kafka-example/target</directory>
-            <outputDirectory>external/storm-kafka-example</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-kafka-example/target</directory>
+            <outputDirectory>contrib/storm-kafka-example</outputDirectory>
             <includes>
                 <include>storm*-jar-with-dependencies.jar</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-kafka</directory>
-            <outputDirectory>external/storm-kafka-example</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-kafka</directory>
+            <outputDirectory>contrib/storm-kafka-example</outputDirectory>
             <includes>
                 <include>README.*</include>
             </includes>
         </fileSet>
 
        <fileSet>
-           <directory>${project.basedir}/../../external/storm-rest/target</directory>
-           <outputDirectory>external/storm-rest</outputDirectory>
+           <directory>${project.basedir}/../../contrib/storm-rest/target</directory>
+           <outputDirectory>contrib/storm-rest</outputDirectory>
            <includes>
                 <include>storm*jar</include>
            </includes>
        </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-rest</directory>
-            <outputDirectory>external/storm-rest</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-rest</directory>
+            <outputDirectory>contrib/storm-rest</outputDirectory>
             <includes>
                 <include>README.*</include>
             </includes>
         </fileSet>
 
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-hdfs/target</directory>
-            <outputDirectory>external/storm-hdfs</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-hdfs/target</directory>
+            <outputDirectory>contrib/storm-hdfs</outputDirectory>
             <includes>
                 <include>storm*jar</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-hdfs</directory>
-            <outputDirectory>external/storm-hdfs</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-hdfs</directory>
+            <outputDirectory>contrib/storm-hdfs</outputDirectory>
             <includes>
                 <include>README.*</include>
             </includes>
         </fileSet>
 
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-hbase/target</directory>
-            <outputDirectory>external/storm-hbase</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-hbase/target</directory>
+            <outputDirectory>contrib/storm-hbase</outputDirectory>
             <includes>
                 <include>storm*jar</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-hbase</directory>
-            <outputDirectory>external/storm-hbase</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-hbase</directory>
+            <outputDirectory>contrib/storm-hbase</outputDirectory>
             <includes>
                 <include>README.*</include>
             </includes>
         </fileSet>
 
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-hive/target</directory>
-            <outputDirectory>external/storm-hive</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-hive/target</directory>
+            <outputDirectory>contrib/storm-hive</outputDirectory>
             <includes>
                 <include>storm*jar</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-hive</directory>
-            <outputDirectory>external/storm-hive</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-hive</directory>
+            <outputDirectory>contrib/storm-hive</outputDirectory>
             <includes>
                 <include>README.*</include>
             </includes>
         </fileSet>
 
         <fileSet>
-            <directory>${project.basedir}/../../external/storm-jmxetric</directory>
-            <outputDirectory>external/storm-jmxetric</outputDirectory>
+            <directory>${project.basedir}/../../contrib/storm-jmxetric</directory>
+            <outputDirectory>contrib/storm-jmxetric</outputDirectory>
             <includes>
                 <include>*/**</include>
             </includes>
@@ -240,8 +240,8 @@
     <files>
         <!-- EXAMPLES -->
         <file>
-            <source>${project.basedir}/../../examples/storm-starter/target/storm-starter-${project.version}-jar-with-dependencies.jar</source>
-            <outputDirectory>/examples/storm-starter/</outputDirectory>
+            <source>${project.basedir}/../../contrib/storm-starter/target/storm-starter-${project.version}-jar-with-dependencies.jar</source>
+            <outputDirectory>/contrib/storm-starter/</outputDirectory>
             <destName>storm-starter-topologies-${project.version}.jar</destName>
         </file>
 
