@@ -23,6 +23,7 @@
   (:use [backtype.storm.daemon [common :only [ACKER-COMPONENT-ID ACKER-INIT-STREAM-ID ACKER-ACK-STREAM-ID
                                               ACKER-FAIL-STREAM-ID system-id? mk-authorization-handler]]])
   (:use [ring.adapter.jetty :only [run-jetty]])
+  (:use [ring.middleware.anti-forgery])
   (:use [clojure.string :only [blank? lower-case trim]])
   (:import [backtype.storm.utils Utils])
   (:import [backtype.storm.generated ExecutorSpecificStats
@@ -676,7 +677,8 @@
         "spouts" (spout-comp id spout-comp-summs (.get_errors summ) window include-sys?)
         "bolts" (bolt-comp id bolt-comp-summs (.get_errors summ) window include-sys?)
         "configuration" topology-conf
-        "visualizationTable" (stream-boxes visualizer-data)}))))
+        "visualizationTable" (stream-boxes visualizer-data)
+        "antiForgeryToken" *anti-forgery-token*}))))
 
 (defn spout-output-stats
   [stream-summary window]
@@ -956,10 +958,16 @@
       (catch Exception ex
         (json-response (exception->json ex) ((:query-params request) "callback") :status 500)))))
 
+
+(def csrf-error-response
+  (json-response {"error" "Forbidden action."
+                  "errorMessage" "missing CSRF token."} 403))
+
 (def app
   (handler/site (-> main-routes
-                    (wrap-reload '[backtype.storm.ui.core])
-                    catch-errors)))
+                  (wrap-reload '[backtype.storm.ui.core])
+                  (wrap-anti-forgery {:error-response csrf-error-response})
+                  catch-errors)))
 
 (def gagnlia-reporter (GangliaReporter. *STORM-CONF*))
 
