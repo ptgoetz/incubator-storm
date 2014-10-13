@@ -116,7 +116,18 @@ function Install(
         Write-Log "Setting the storm_HOME environment variable at machine scope to `"$stormInstallPath`""
         [Environment]::SetEnvironmentVariable("storm_HOME", $stormInstallPath, [EnvironmentVariableTarget]::Machine)
         $ENV:storm_HOME = "$stormInstallPath"
-		
+        
+        ###
+        ### Processing folders
+        ###
+		Write-Log "Renaming external to contrib"
+		Rename-Item -Path "$ENV:storm_HOME\external" -NewName "$ENV:storm_HOME\contrib" -Force 
+		Write-Log "Moving examples/storm-starter to contrib"
+		New-Item -ItemType directory -Path "$ENV:storm_HOME\contrib\storm-starter" -ErrorAction SilentlyContinue
+		Move-Item -Path "$ENV:storm_HOME\examples\storm-starter\*" -Destination "$ENV:storm_HOME\contrib\storm-starter" -Force 
+		Write-Log "Removing examples dir"
+		Remove-Item -Path "$ENV:storm_HOME\examples" -Recurse -Force -ErrorAction SilentlyContinue
+
 		if ($roles) { 
 
 		###

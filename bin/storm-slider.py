@@ -42,6 +42,7 @@ STORM_TEMP_JSON_FILE = "/tmp/storm.json"
 STORM_CONF_DIR = expanduser("~")+"/.storm"
 STORM_CONF_FILE = STORM_CONF_DIR + "/storm.yaml"
 SLIDER_REGISTRY_CMD = SLIDER_DIR+"/bin/slider"
+STORM_CMD = STORM_HOME+"/bin/storm"
 
 
 def get_storm_config_json(appname):
@@ -74,7 +75,7 @@ def main():
 
     get_storm_config_json(sys.argv[1])
     storm_args = storm_cmd_args(sys.argv[2:])
-    os.execvp("storm",storm_args)
+    os.execvp(STORM_CMD,storm_args)
 
 if __name__ == "__main__":
     main()
