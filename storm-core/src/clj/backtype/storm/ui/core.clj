@@ -969,7 +969,21 @@
                   (wrap-anti-forgery {:error-response csrf-error-response})
                   catch-errors)))
 
-(def gagnlia-reporter (GangliaReporter. *STORM-CONF*))
+(defn mk-ganglia-reporter
+  []
+  (let [storm-home (System/getProperty "storm.home")
+        ; this is needed for compilation to succeed, during compile storm-home may not be set
+        ; but as we are initializing ganglia-reporter to keep the ref around
+        ; it ends up calling storm-home and .toString will throw NPE failing the compilation
+        ; in real runTime storm-home will never be null.
+        storm-home (if storm-home (.toString storm-home) "")
+        file-sep (.toString file-path-separator)
+        conf-file-path (str storm-home (when-not (.endsWith storm-home file-sep) file-sep) "conf" file-sep "config.yaml")
+        ganglia-conf {}; (clojure-from-yaml-file (File. conf-file-path))
+        ]
+  (GangliaReporter. ganglia-conf)))
+
+(def ganglia-reporter (mk-ganglia-reporter))
 
 (defn start-server!
   []

@@ -1,10 +1,5 @@
 package backtype.storm.metric;
 
-import static backtype.storm.Config.GANGLIA_HOST;
-import static backtype.storm.Config.GANGLIA_MODE;
-import static backtype.storm.Config.GANGLIA_PORT;
-import static backtype.storm.Config.GANGLIA_REPORT_INTERVAL_SEC;
-
 import backtype.storm.generated.ClusterSummary;
 import backtype.storm.generated.SupervisorSummary;
 import backtype.storm.generated.TopologySummary;
@@ -37,6 +32,28 @@ import java.util.TimerTask;
  */
 public class GangliaReporter {
     private static final Logger LOG = LoggerFactory.getLogger(GangliaReporter.class);
+
+    /*
+     * Ganglia host name where the metrics should be sent.
+    */
+    public static final String GANGLIA_HOST = "ganglia.host";
+
+    /*
+     * Ganglia port, default is 8649.
+     */
+    public static final String GANGLIA_PORT = "ganglia.port";
+
+    /*
+     * Ganglia mode, unicast or multicast, default is multicast.
+     */
+    public static final String GANGLIA_MODE = "ganglia.mode";
+
+    /*
+     * Interval at which metrics will be sent to ganglia, default is 60 seconds.
+     */
+    public static final String GANGLIA_REPORT_INTERVAL_SEC = "ganglia.reportIntervalSeconds";
+
+
 
     private Timer timer;
     private GMetric ganglia;

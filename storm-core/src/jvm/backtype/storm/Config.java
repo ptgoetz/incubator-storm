@@ -937,30 +937,6 @@ public class Config extends HashMap<String, Object> {
     public static final String TOPOLOGY_METRICS_CONSUMER_REGISTER = "topology.metrics.consumer.register";
     public static final Object TOPOLOGY_METRICS_CONSUMER_REGISTER_SCHEMA = ConfigValidation.MapsValidator;
 
-    /*
-     * Ganglia host name where the metrics should be sent.
-     */
-    public static final String GANGLIA_HOST = "ganglia.host";
-    public static final Object GANGLIA_HOST_SCHEMA = ConfigValidation.StringsValidator;
-
-    /*
-     * Ganglia port, default is 8649.
-     */
-    public static final String GANGLIA_PORT = "ganglia.port";
-    public static final Object GANGLIA_PORT_SCHEMA = ConfigValidation.IntegerValidator;
-
-    /*
-     * Ganglia mode, unicast or multicast, default is multicast.
-     */
-    public static final String GANGLIA_MODE = "ganglia.mode";
-    public static final Object GANGLIA_MODE_SCHEMA = ConfigValidation.StringsValidator;
-
-    /*
-     * Interval at which metrics will be sent to ganglia, default is 60 seconds.
-     */
-    public static final String GANGLIA_REPORT_INTERVAL_SEC = "ganglia.reportIntervalSeconds";
-    public static final Object GANGLIA_REPORT_INTERVAL_SEC_SCHEMA = ConfigValidation.IntegersValidator;
-
     /**
      * The maximum parallelism allowed for a component in this topology. This configuration is
      * typically used in testing to limit the number of threads spawned in local mode.
