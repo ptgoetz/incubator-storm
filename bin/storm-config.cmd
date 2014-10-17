@@ -97,7 +97,7 @@ FOR /F "delims=" %%i in (temp.txt) do (
 
 
 :storm_opts
- set STORM_OPTS=-Dstorm.options= -Dstorm.home=%STORM_HOME% -Djava.library.path=%JAVA_LIBRARY_PATH%
+ set STORM_OPTS=-Dstorm.options= -Dstorm.home=%STORM_HOME% -Djava.library.path=%JAVA_LIBRARY_PATH%;%JAVA_HOME%\bin;%JAVA_HOME%\lib;%JAVA_HOME%\jre\bin;%JAVA_HOME%\jre\lib
  set STORM_OPTS=%STORM_OPTS% -Dlogback.configurationFile=%STORM_LOGBACK_CONFIGURATION_FILE%
  set STORM_OPTS=%STORM_OPTS% -Dstorm.log.dir=%STORM_LOG_DIR%
  del /F temp.txt
