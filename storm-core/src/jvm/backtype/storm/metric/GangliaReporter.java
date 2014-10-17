@@ -36,44 +36,47 @@ public class GangliaReporter {
     /*
      * Ganglia host name where the metrics should be sent.
     */
-    public static final String GANGLIA_HOST = "ganglia.host";
+    public static final String GANGLIA_HOST = "host";
 
     /*
      * Ganglia port, default is 8649.
      */
-    public static final String GANGLIA_PORT = "ganglia.port";
+    public static final String GANGLIA_PORT = "port";
 
     /*
      * Ganglia mode, unicast or multicast, default is multicast.
      */
-    public static final String GANGLIA_MODE = "ganglia.mode";
+    public static final String GANGLIA_MODE = "reportInterval";
 
     /*
      * Interval at which metrics will be sent to ganglia, default is 60 seconds.
      */
-    public static final String GANGLIA_REPORT_INTERVAL_SEC = "ganglia.reportIntervalSeconds";
+    public static final String GANGLIA_REPORT_INTERVAL_SEC = "reportInterval";
 
+    public static final String GANGLIA = "ganglia";
 
 
     private Timer timer;
     private GMetric ganglia;
     NimbusClient nimbusClient;
 
-    public GangliaReporter(Map stormConf) {
+    public GangliaReporter(Map conf) {
         try {
-            Validate.notNull(stormConf.get(GANGLIA_HOST), GANGLIA_HOST + " can not be null");
+            Validate.notNull(conf.get(GANGLIA), GANGLIA + " can not be null");
+
+            Map gangliaConf = (Map) conf.get(GANGLIA);
 
             GMetric.UDPAddressingMode mode =
-                    "UNICAST".equalsIgnoreCase((String) stormConf.get(GANGLIA_MODE)) ? GMetric.UDPAddressingMode.UNICAST : GMetric.UDPAddressingMode.MULTICAST;
+                    "UNICAST".equalsIgnoreCase((String) gangliaConf.get(GANGLIA_MODE)) ? GMetric.UDPAddressingMode.UNICAST : GMetric.UDPAddressingMode.MULTICAST;
 
             this.ganglia = new GMetric(
-                    stormConf.get(GANGLIA_HOST).toString(),
-                    stormConf.get(GANGLIA_PORT) != null ? Integer.parseInt(stormConf.get(GANGLIA_PORT).toString()) : 8649,
+                    gangliaConf.get(GANGLIA_HOST).toString(),
+                    gangliaConf.get(GANGLIA_PORT) != null ? Integer.parseInt(gangliaConf.get(GANGLIA_PORT).toString()) : 8649,
                     mode,
                     1,
                     true,
                     null);
-           this.nimbusClient = NimbusClient.getConfiguredClient(stormConf);
+           this.nimbusClient = NimbusClient.getConfiguredClient(gangliaConf);
            this.timer = new Timer("ganglia-reporter", true);
             TimerTask task = new TimerTask() {
                 @Override
@@ -85,10 +88,10 @@ public class GangliaReporter {
                     }
                 }
             };
-            long interval = stormConf.get(GANGLIA_REPORT_INTERVAL_SEC) == null? 60 : Long.parseLong(stormConf.get(GANGLIA_REPORT_INTERVAL_SEC).toString());
+            long interval = gangliaConf.get(GANGLIA_REPORT_INTERVAL_SEC) == null? 60 : Long.parseLong(gangliaConf.get(GANGLIA_REPORT_INTERVAL_SEC).toString());
             this.timer.schedule(task, interval, interval);
         } catch (Exception e) {
-            LOG.warn("could not initialize ganglia, please specify ganglia.host, ganglia.port [default 8649], ganglia.mode [default MULTICAST] in your storm.yaml ", e);
+            LOG.warn("could not initialize ganglia, please specify host, port [default 8649], mode [default MULTICAST] under STORM_HOME/conf/config.yaml ", e);
         }
     }
 
@@ -123,7 +126,7 @@ public class GangliaReporter {
             reportMetric("Total Executors", totalExecutors);
             reportMetric("Total Tasks", totalTasks);
         } else {
-            LOG.warn("could not emit ganglia metric as ganglia metric is not initiliazed, have you set ganglia.host, ganglia.port configs correctly?");
+            LOG.warn("could not emit ganglia metric as ganglia metric instance is null, have you set host, port configs correctly?");
         }
     }
 
