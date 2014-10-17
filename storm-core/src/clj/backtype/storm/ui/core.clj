@@ -979,7 +979,7 @@
         storm-home (if storm-home (.toString storm-home) "")
         file-sep (.toString file-path-separator)
         conf-file-path (str storm-home (when-not (.endsWith storm-home file-sep) file-sep) "conf" file-sep "config.yaml")
-        ganglia-conf {}; (clojure-from-yaml-file (File. conf-file-path))
+        ganglia-conf (clojure-from-yaml-file (File. conf-file-path))
         ]
   (GangliaReporter. ganglia-conf)))
 
