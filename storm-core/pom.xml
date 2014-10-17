@@ -66,6 +66,12 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>ring</groupId>
+            <artifactId>ring-anti-forgery</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
         </dependency>
@@ -282,6 +288,11 @@
         	<artifactId>junit</artifactId>
         	<version>4.1</version>
         	<scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>info.ganglia.gmetric4j</groupId>
+            <artifactId>gmetric4j</artifactId>
+            <version>1.0.7</version>
         </dependency>
     </dependencies>
     <build>

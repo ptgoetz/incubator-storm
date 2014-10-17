@@ -937,7 +937,6 @@ public class Config extends HashMap<String, Object> {
     public static final String TOPOLOGY_METRICS_CONSUMER_REGISTER = "topology.metrics.consumer.register";
     public static final Object TOPOLOGY_METRICS_CONSUMER_REGISTER_SCHEMA = ConfigValidation.MapsValidator;
 
-
     /**
      * The maximum parallelism allowed for a component in this topology. This configuration is
      * typically used in testing to limit the number of threads spawned in local mode.

@@ -23,6 +23,7 @@
   (:use [backtype.storm.daemon [common :only [ACKER-COMPONENT-ID ACKER-INIT-STREAM-ID ACKER-ACK-STREAM-ID
                                               ACKER-FAIL-STREAM-ID system-id? mk-authorization-handler]]])
   (:use [ring.adapter.jetty :only [run-jetty]])
+  (:use [ring.middleware.anti-forgery])
   (:use [clojure.string :only [blank? lower-case trim]])
   (:import [backtype.storm.utils Utils])
   (:import [backtype.storm.generated ExecutorSpecificStats
@@ -33,6 +34,7 @@
   (:import [backtype.storm.security.auth AuthUtils ReqContext])
   (:import [backtype.storm.generated AuthorizationException])
   (:import [backtype.storm.security.auth AuthUtils])
+  (:import [backtype.storm.metric GangliaReporter])
   (:import [java.io File])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
@@ -675,7 +677,8 @@
         "spouts" (spout-comp id spout-comp-summs (.get_errors summ) window include-sys?)
         "bolts" (bolt-comp id bolt-comp-summs (.get_errors summ) window include-sys?)
         "configuration" topology-conf
-        "visualizationTable" (stream-boxes visualizer-data)}))))
+        "visualizationTable" (stream-boxes visualizer-data)
+        "antiForgeryToken" *anti-forgery-token*}))))
 
 (defn spout-output-stats
   [stream-summary window]
@@ -955,10 +958,32 @@
       (catch Exception ex
         (json-response (exception->json ex) ((:query-params request) "callback") :status 500)))))
 
+
+(def csrf-error-response
+  (json-response {"error" "Forbidden action."
+                  "errorMessage" "missing CSRF token."} 403))
+
 (def app
   (handler/site (-> main-routes
-                    (wrap-reload '[backtype.storm.ui.core])
-                    catch-errors)))
+                  (wrap-reload '[backtype.storm.ui.core])
+                  (wrap-anti-forgery {:error-response csrf-error-response})
+                  catch-errors)))
+
+(defn mk-ganglia-reporter
+  []
+  (let [storm-home (System/getProperty "storm.home")
+        ; this is needed for compilation to succeed, during compile storm-home may not be set
+        ; but as we are initializing ganglia-reporter to keep the ref around
+        ; it ends up calling storm-home and .toString will throw NPE failing the compilation
+        ; in real runTime storm-home will never be null.
+        storm-home (if storm-home (.toString storm-home) "")
+        file-sep (.toString file-path-separator)
+        conf-file-path (str storm-home (when-not (.endsWith storm-home file-sep) file-sep) "conf" file-sep "config.yaml")
+        ganglia-conf {}; (clojure-from-yaml-file (File. conf-file-path))
+        ]
+  (GangliaReporter. ganglia-conf)))
+
+(def ganglia-reporter (mk-ganglia-reporter))
 
 (defn start-server!
   []
