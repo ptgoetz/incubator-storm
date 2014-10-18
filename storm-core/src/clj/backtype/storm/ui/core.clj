@@ -18,7 +18,7 @@
   (:use compojure.core)
   (:use ring.middleware.reload)
   (:use [hiccup core page-helpers])
-  (:use [backtype.storm config util log])
+  (:use [backtype.storm config util log timer])
   (:use [backtype.storm.ui helpers])
   (:use [backtype.storm.daemon [common :only [ACKER-COMPONENT-ID ACKER-INIT-STREAM-ID ACKER-ACK-STREAM-ID
                                               ACKER-FAIL-STREAM-ID system-id? mk-authorization-handler]]])
@@ -963,27 +963,38 @@
   (json-response {"error" "Forbidden action."
                   "errorMessage" "missing CSRF token."} 403))
 
+(defn start-ganglia-reporter!
+  []
+  (try
+    (let [storm-home (System/getProperty "storm.home")
+          ; this is needed for compilation to succeed, during compile storm-home may not be set
+          ; but as we are initializing ganglia-reporter to keep the ref around
+          ; it ends up calling storm-home and .toString will throw NPE failing the compilation
+          ; in real runTime storm-home will never be null.
+          storm-home (if storm-home (.toString storm-home) "")
+          file-sep (.toString file-path-separator)
+          conf-file-path (str storm-home (when-not (.endsWith storm-home file-sep) file-sep) "conf" file-sep "config.yaml")
+          ganglia-conf (if (exists-file? conf-file-path) (clojure-from-yaml-file (File. conf-file-path)))
+          interval-secs (get-in ganglia-conf [GangliaReporter/GANGLIA GangliaReporter/GANGLIA_REPORT_INTERVAL_SEC])
+          enable-ganglia (ganglia-conf  GangliaReporter/ENABLE_GANGLIA)
+          ganglia-reporter (if (not-nil? ganglia-conf)  (GangliaReporter. ganglia-conf) nil)
+          ]
+      (if (and enable-ganglia (not-nil? ganglia-reporter))
+        (when interval-secs
+          (log-debug "starting ganglia reporter thread at interval: " interval-secs)
+          (schedule-recurring (mk-timer :thread-name "ganglia-reporter")
+                          0 ;; Start immediately.
+                          interval-secs
+                          (fn [] (.reportMetrics ganglia-reporter))))))
+    (catch Exception ex
+      (log-error ex))))
+
 (def app
   (handler/site (-> main-routes
                   (wrap-reload '[backtype.storm.ui.core])
                   (wrap-anti-forgery {:error-response csrf-error-response})
                   catch-errors)))
 
-(defn mk-ganglia-reporter
-  []
-  (let [storm-home (System/getProperty "storm.home")
-        ; this is needed for compilation to succeed, during compile storm-home may not be set
-        ; but as we are initializing ganglia-reporter to keep the ref around
-        ; it ends up calling storm-home and .toString will throw NPE failing the compilation
-        ; in real runTime storm-home will never be null.
-        storm-home (if storm-home (.toString storm-home) "")
-        file-sep (.toString file-path-separator)
-        conf-file-path (str storm-home (when-not (.endsWith storm-home file-sep) file-sep) "conf" file-sep "config.yaml")
-        ganglia-conf (clojure-from-yaml-file (File. conf-file-path))
-        ]
-  (GangliaReporter. ganglia-conf)))
-
-(def ganglia-reporter (mk-ganglia-reporter))
 
 (defn start-server!
   []
@@ -992,6 +1003,7 @@
           header-buffer-size (int (.get conf UI-HEADER-BUFFER-BYTES))
           filters-confs [{:filter-class (conf UI-FILTER)
                           :filter-params (conf UI-FILTER-PARAMS)}]]
+      (start-ganglia-reporter!)
       (run-jetty app {:port (conf UI-PORT)
                           :join? false
                           :configurator (fn [server]

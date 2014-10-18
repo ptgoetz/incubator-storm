@@ -1,5 +1,7 @@
 package backtype.storm.metric;
 
+import backtype.storm.Config;
+import backtype.storm.utils.Utils;
 import backtype.storm.generated.ClusterSummary;
 import backtype.storm.generated.SupervisorSummary;
 import backtype.storm.generated.TopologySummary;
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -46,8 +49,9 @@ public class GangliaReporter {
     /*
      * Ganglia mode, unicast or multicast, default is multicast.
      */
-    public static final String GANGLIA_MODE = "reportInterval";
+    public static final String GANGLIA_MODE = "addressMode";
 
+    public static final String ENABLE_GANGLIA = "enableGanglia";
     /*
      * Interval at which metrics will be sent to ganglia, default is 60 seconds.
      */
@@ -63,9 +67,7 @@ public class GangliaReporter {
     public GangliaReporter(Map conf) {
         try {
             Validate.notNull(conf.get(GANGLIA), GANGLIA + " can not be null");
-
             Map gangliaConf = (Map) conf.get(GANGLIA);
-
             GMetric.UDPAddressingMode mode =
                     "UNICAST".equalsIgnoreCase((String) gangliaConf.get(GANGLIA_MODE)) ? GMetric.UDPAddressingMode.UNICAST : GMetric.UDPAddressingMode.MULTICAST;
 
@@ -76,29 +78,16 @@ public class GangliaReporter {
                     1,
                     true,
                     null);
-           this.nimbusClient = NimbusClient.getConfiguredClient(gangliaConf);
-           this.timer = new Timer("ganglia-reporter", true);
-            TimerTask task = new TimerTask() {
-                @Override
-                public void run() {
-                    try {
-                        reportMetrics();
-                    } catch (Exception e) {
-                        LOG.warn("Failed to report Ganglia metrics", e);
-                    }
-                }
-            };
-            long interval = gangliaConf.get(GANGLIA_REPORT_INTERVAL_SEC) == null? 60 : Long.parseLong(gangliaConf.get(GANGLIA_REPORT_INTERVAL_SEC).toString());
-            this.timer.schedule(task, interval, interval);
+            Map stormConf = Utils.readStormConfig();
+            this.nimbusClient = NimbusClient.getConfiguredClient(stormConf);
         } catch (Exception e) {
             LOG.warn("could not initialize ganglia, please specify host, port [default 8649], mode [default MULTICAST] under STORM_HOME/conf/config.yaml ", e);
         }
     }
 
 
-    void reportMetrics() throws Exception {
+    public void reportMetrics() throws Exception {
         ClusterSummary cs = this.nimbusClient.getClient().getClusterInfo();
-
         if (ganglia != null) {
             reportMetric("Supervisors", cs.get_supervisors_size());
             reportMetric("Topologies", cs.get_topologies_size());
