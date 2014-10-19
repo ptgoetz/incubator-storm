@@ -286,6 +286,7 @@ def parse_config_opts(args):
     curr = args[:]
     curr.reverse()
     global CMD_OPTS
+    global CONFIG_OPTS
     args_list = []
     while len(curr) > 0:
         token = curr.pop()
@@ -293,6 +294,8 @@ def parse_config_opts(args):
             CMD_OPTS['app_name'] = curr.pop() if (len(curr) != 0) else None
         elif token == "--user":
             CMD_OPTS['user'] =  curr.pop() if (len(curr) != 0) else None
+        elif token == "-c" and len(curr) != 0:
+            CONFIG_OPTS.append(curr.pop())
         else:
             args_list.append(token)
     return args_list
