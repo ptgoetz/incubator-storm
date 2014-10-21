@@ -48,6 +48,7 @@ storm.auth.simple-acl.users: []
 storm.auth.simple-acl.users.commands: []
 storm.auth.simple-acl.admins: []
 storm.meta.serialization.delegate: "backtype.storm.serialization.DefaultSerializationDelegate"
+storm.thrift.timeoutMillis: 10000
 
 ### nimbus.* configs are for the master
 nimbus.host: "localhost"
