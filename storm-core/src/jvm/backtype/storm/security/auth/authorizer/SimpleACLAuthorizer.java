@@ -48,6 +48,7 @@ public class SimpleACLAuthorizer implements IAuthorizer {
 
     protected Set<String> _admins;
     protected Set<String> _supervisors;
+    protected Set<String> _whiteListUsers;
     protected IPrincipalToLocal _ptol;
     protected IGroupMappingServiceProvider _groups;
     /**
@@ -58,6 +59,7 @@ public class SimpleACLAuthorizer implements IAuthorizer {
     public void prepare(Map conf) {
         _admins = new HashSet<String>();
         _supervisors = new HashSet<String>();
+        _whiteListUsers = new HashSet<String>();
 
         if (conf.containsKey(Config.NIMBUS_ADMINS)) {
             _admins.addAll((Collection<String>)conf.get(Config.NIMBUS_ADMINS));
@@ -65,6 +67,10 @@ public class SimpleACLAuthorizer implements IAuthorizer {
         if (conf.containsKey(Config.NIMBUS_SUPERVISOR_USERS)) {
             _supervisors.addAll((Collection<String>)conf.get(Config.NIMBUS_SUPERVISOR_USERS));
         }
+        if (conf.containsKey(Config.NIMBUS_USERS)) {
+            _whiteListUsers.addAll((Collection<String>)conf.get(Config.NIMBUS_USERS));
+        }
+
         _ptol = AuthUtils.GetPrincipalToLocalPlugin(conf);
         _groups = AuthUtils.GetGroupMappingServiceProviderPlugin(conf);
     }
@@ -95,7 +101,10 @@ public class SimpleACLAuthorizer implements IAuthorizer {
         }
 
         if (_userCommands.contains(operation)) {
-            return true;
+            if (_whiteListUsers.size() > 0 && _whiteListUsers.contains(user))
+                return true;
+            else if (_whiteListUsers.size() == 0)
+                return true;
         }
 
         if (_topoCommands.contains(operation)) {
