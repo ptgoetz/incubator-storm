@@ -58,8 +58,8 @@ public class HiveTopology {
                 .withTxnsPerBatch(10)
                 .withBatchSize(100)
                 .withIdleTimeout(10)
-                .withKerberosKeytab(args[5])
-                .withKerberosPrincipal(args[6]);
+                .withKerberosKeytab(args[4])
+                .withKerberosPrincipal(args[5]);
         } else {
             hiveOptions = new HiveOptions(metaStoreURI,dbName,tblName,mapper)
                 .withTxnsPerBatch(10)

@@ -44,7 +44,7 @@ import storm.trident.state.StateFactory;
 
 
 public class TridentHiveTopology {
-    public static StormTopology buildTopology(String metaStoreURI, String dbName, String tblName) {
+    public static StormTopology buildTopology(String metaStoreURI, String dbName, String tblName, Object keytab, Object principal) {
         int batchSize = 100;
         FixedBatchSpout spout = new FixedBatchSpout(batchSize);
         spout.setCycle(true);
@@ -56,10 +56,20 @@ public class TridentHiveTopology {
         DelimitedRecordHiveMapper mapper = new DelimitedRecordHiveMapper()
             .withColumnFields(new Fields(colNames))
             .withPartitionFields(new Fields(partNames));
-        HiveOptions hiveOptions = new HiveOptions(metaStoreURI,dbName,tblName,mapper)
+        HiveOptions hiveOptions;
+        if (keytab != null && principal != null) {
+            hiveOptions = new HiveOptions(metaStoreURI,dbName,tblName,mapper)
+                .withTxnsPerBatch(10)
+                .withBatchSize(batchSize)
+                .withIdleTimeout(10)
+                .withKerberosKeytab((String)keytab)
+                .withKerberosPrincipal((String)principal);
+        } else  {
+            hiveOptions = new HiveOptions(metaStoreURI,dbName,tblName,mapper)
                 .withTxnsPerBatch(10)
                 .withBatchSize(batchSize)
                 .withIdleTimeout(10);
+        }
         StateFactory factory = new HiveStateFactory().withOptions(hiveOptions);
         TridentState state = stream.partitionPersist(factory, hiveFields, new HiveUpdater(), new Fields());
         return topology.build();
@@ -80,7 +90,7 @@ public class TridentHiveTopology {
         conf.setMaxSpoutPending(5);
         if(args.length == 3) {
             LocalCluster cluster = new LocalCluster();
-            cluster.submitTopology("wordCounter", conf, buildTopology(metaStoreURI, dbName, tblName));
+            cluster.submitTopology("wordCounter", conf, buildTopology(metaStoreURI, dbName, tblName,null,null));
             System.out.println("waiting for 60 seconds");
             waitForSeconds(60);
             System.out.println("killing topology");
@@ -91,14 +101,19 @@ public class TridentHiveTopology {
             System.exit(0);
         } else if(args.length == 4) {
             try {
-                StormSubmitter.submitTopology(args[3], conf, buildTopology(metaStoreURI, dbName, tblName));
+                StormSubmitter.submitTopology(args[3], conf, buildTopology(metaStoreURI, dbName, tblName,null,null));
+            } catch(Exception e) {
+                System.out.println("Failed to submit topology "+e);
+            }
+        } else if (args.length == 6) {
+            try {
+                StormSubmitter.submitTopology(args[3], conf, buildTopology(metaStoreURI, dbName, tblName,args[4],args[5]));
             } catch(Exception e) {
                 System.out.println("Failed to submit topology "+e);
             }
         } else {
             System.out.println("Usage: TridentHiveTopology metastoreURI dbName tableName [topologyNamey]");
         }
-
     }
 
     public static class FixedBatchSpout implements IBatchSpout {

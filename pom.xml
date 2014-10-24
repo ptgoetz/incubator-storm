@@ -215,10 +215,10 @@
         <clojure-data-codec.version>0.1.0</clojure-data-codec.version>
         <clojure-contrib.version>1.2.0</clojure-contrib.version>
         <zookeeper.version>3.4.6</zookeeper.version>
-	<junit.version>3.8.1</junit.version>
+	      <junit.version>4.11</junit.version>
         <hbase.version>0.96.1.1-hadoop2</hbase.version>
-        <hive.version>0.14.0.2.2.0.0-655</hive.version>
-        <hadoop.version>2.6.0.2.2.0.0-658</hadoop.version>
+        <hive.version>0.14.0.2.2.0.0-1010</hive.version>
+        <hadoop.version>2.6.0.2.2.0.0-1010</hadoop.version>
         <kafka.version>0.8.1.1</kafka.version>
     </properties>
 
