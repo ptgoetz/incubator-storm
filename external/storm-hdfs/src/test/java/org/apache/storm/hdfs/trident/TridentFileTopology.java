@@ -32,7 +32,7 @@ public class TridentFileTopology {
         spout.setCycle(true);
 
         TridentTopology topology = new TridentTopology();
-        Stream stream = topology.newStream("spout1", spout);
+        Stream stream = topology.newStream("hdfs-trident-spout1", spout);
 
         Fields hdfsFields = new Fields("sentence", "key");
 
