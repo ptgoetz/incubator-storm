@@ -464,7 +464,6 @@ int setup_stormdist_dir(const char* local_dir) {
     }
     FTS* tree = fts_open(paths, FTS_PHYSICAL | FTS_XDEV, NULL);
     FTSENT* entry = NULL;
-    int ret = 0;
 
     if (tree == NULL) {
       fprintf(ERRORFILE,
@@ -509,7 +508,7 @@ int setup_stormdist_dir(const char* local_dir) {
         break;
       }
     }
-    ret = fts_close(tree);
+    fts_close(tree);
     free(paths[0]);
     paths[0] = NULL;
   }
