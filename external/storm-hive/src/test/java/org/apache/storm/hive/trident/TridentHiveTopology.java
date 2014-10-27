@@ -49,7 +49,7 @@ public class TridentHiveTopology {
         FixedBatchSpout spout = new FixedBatchSpout(batchSize);
         spout.setCycle(true);
         TridentTopology topology = new TridentTopology();
-        Stream stream = topology.newStream("spout1",spout);
+        Stream stream = topology.newStream("hiveTridentspout1",spout);
         String[] partNames = {"city","state"};
         String[] colNames = {"id","name","phone","street"};
         Fields hiveFields = new Fields("id","name","phone","street","city","state");
@@ -90,11 +90,11 @@ public class TridentHiveTopology {
         conf.setMaxSpoutPending(5);
         if(args.length == 3) {
             LocalCluster cluster = new LocalCluster();
-            cluster.submitTopology("wordCounter", conf, buildTopology(metaStoreURI, dbName, tblName,null,null));
+            cluster.submitTopology("tridentHiveTopology", conf, buildTopology(metaStoreURI, dbName, tblName,null,null));
             System.out.println("waiting for 60 seconds");
             waitForSeconds(60);
             System.out.println("killing topology");
-            cluster.killTopology("wordCounter");
+            cluster.killTopology("tridenHiveTopology");
             System.out.println("cluster shutdown");
             cluster.shutdown();
             System.out.println("cluster shutdown");

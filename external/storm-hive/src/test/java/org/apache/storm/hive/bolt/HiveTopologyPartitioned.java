@@ -39,9 +39,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 public class HiveTopologyPartitioned {
-    static final String USER_SPOUT_ID = "user-spout";
-    static final String BOLT_ID = "my-hive-bolt";
-    static final String TOPOLOGY_NAME = "hive-test-topology1";
+    static final String USER_SPOUT_ID = "hive-user-spout-partitioned";
+    static final String BOLT_ID = "my-hive-bolt-partitioned";
+    static final String TOPOLOGY_NAME = "hive-test-topology-partitioned";
 
     public static void main(String[] args) throws Exception {
         String metaStoreURI = args[0];
