@@ -995,8 +995,10 @@
   ([x form & more] `(-<> (-<> ~x ~form) ~@more)))
 
 (def LOG-DIR
-  (.getCanonicalPath 
-                (clojure.java.io/file (System/getProperty "storm.home") "logs")))
+  (.getCanonicalPath
+    (clojure.java.io/file (if (System/getProperty "storm.log.dir")
+                            (System/getProperty "storm.log.dir")
+                            (str (System/getProperty "storm.home") "logs")))))
 
 (defn- logs-rootname [storm-id port]
   (str storm-id "-worker-" port))
