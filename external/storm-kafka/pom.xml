@@ -105,7 +105,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.9.2</artifactId>
+            <artifactId>kafka_2.10</artifactId>
             <version>${kafka.version}</version>
             <!-- use provided scope, so users can pull in whichever scala version they choose -->
             <scope>provided</scope>
