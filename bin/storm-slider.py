@@ -24,6 +24,9 @@ import subprocess as sub
 import re
 import shlex
 
+def is_windows():
+    return sys.platform.startswith('win')
+
 def identity(x):
     return x
 
@@ -56,6 +59,8 @@ SLIDER_CLIENT_CONF = os.path.join(SLIDER_DIR,'conf','slider-client.xml')
 SLIDER_CMD = os.path.join(SLIDER_DIR,'bin','slider.py')
 JAVA_HOME = os.getenv('JAVA_HOME', None)
 JAVA_CMD= 'java' if not JAVA_HOME else os.path.join(JAVA_HOME, 'bin', 'java')
+if is_windows():
+    JAVA_CMD = JAVA_CMD + '.exe'
 STORM_THRIFT_TRANSPORT_KEY = "storm.thrift.transport"
 NIMBUS_HOST_KEY = "nimbus.host"
 NIMBUS_THRIFT_PORT_KEY = "nimbus.thrift.port"
