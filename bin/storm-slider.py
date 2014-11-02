@@ -125,9 +125,11 @@ def exec_storm_class(klass, jvmtype="-server", jvmopts=[], extrajars=[], args=[]
     ] + jvmopts + [klass] + list(args)
     print "Running: " + " ".join(all_args)
     if fork:
-        os.spawnvp(os.P_WAIT, JAVA_CMD, all_args)
+        sub.call([JAVA_CMD] + all_args[1:])
+        #os.spawnvp(os.P_WAIT, JAVA_CMD, all_args)
     else:
-        os.execvp(JAVA_CMD, all_args) # replaces the current process and never
+        sub.Popen([JAVA_CMD] + all_args[1:])
+        #os.execvp(JAVA_CMD, all_args) # replaces the current process and never
             # returns
 
 def jar(jarfile, klass, *args):
@@ -247,7 +249,12 @@ def quicklinks():
     if 'user' in CMD_OPTS.keys():
         all_args.append( "--user "+CMD_OPTS['user'])
 
-    os.spawnvp(os.P_WAIT,SLIDER_CMD, all_args)
+    #os.spawnvp(os.P_WAIT,SLIDER_CMD, all_args)
+    cmd = [SLIDER_CMD] + all_args[1:]
+    if is_windows():
+        cmd = ['python'] + cmd
+
+    sub.call(cmd)
 
 def get_storm_config_json():
     global CMD_OPTS
@@ -261,7 +268,13 @@ def get_storm_config_json():
     if 'user' in CMD_OPTS.keys():
         all_args.append( "--user "+CMD_OPTS['user'])
 
-    os.spawnvp(os.P_WAIT,SLIDER_CMD, all_args)
+    #os.spawnvp(os.P_WAIT,SLIDER_CMD, all_args)
+    cmd = [SLIDER_CMD] + all_args[1:]
+
+    if is_windows():
+        cmd = ['python'] + cmd
+
+    sub.call(cmd)
     if not os.path.exists(CONFFILE):
         print "Failed to read slider deployed storm config"
         sys.exit(1)
