@@ -32,26 +32,35 @@ import org.slf4j.LoggerFactory;
  */
 public class LocalState {
     public static Logger LOG = LoggerFactory.getLogger(LocalState.class);
+
     private VersionedStore _vs;
     
     public LocalState(String backingDir) throws IOException {
         LOG.debug("New Local State for {}", backingDir);
         _vs = new VersionedStore(backingDir);
     }
-    
+
     public synchronized Map<Object, Object> snapshot() throws IOException {
         int attempts = 0;
+        Map<Object, Object> result = new HashMap<Object, Object>();
         while(true) {
             String latestPath = _vs.mostRecentVersionPath();
-            if(latestPath==null) return new HashMap<Object, Object>();
-            try {
-                return (Map<Object, Object>) Utils.deserialize(FileUtils.readFileToByteArray(new File(latestPath)));
-            } catch(IOException e) {
-                attempts++;
-                if(attempts >= 10) {
-                    throw e;
+            if(latestPath != null) {
+                try {
+                    byte[] serialized = FileUtils.readFileToByteArray(new File(latestPath));
+                    if (serialized.length == 0) {
+                        LOG.warn("LocalState file '{}' contained no data, resetting state", latestPath);
+                    } else {
+                        result = (Map<Object, Object>) Utils.deserialize(serialized);
+                    }
+                } catch (IOException e) {
+                    attempts++;
+                    if (attempts >= 10) {
+                        throw e;
+                    }
                 }
             }
+            return result;
         }
     }
     
@@ -86,13 +95,7 @@ public class LocalState {
     private void persist(Map<Object, Object> val, boolean cleanup) throws IOException {
         byte[] toWrite = Utils.serialize(val);
         String newPath = _vs.createVersion();
-        File file = new File(newPath);
-        FileUtils.writeByteArrayToFile(file, toWrite);
-        if (toWrite.length != file.length()) {
-            throw new IOException("Tried to serialize " + toWrite.length + 
-                    " bytes to " + file.getCanonicalPath() + ", but " +
-                    file.length() + " bytes were written.");
-        }
+        FileUtils.writeByteArrayToFile(new File(newPath), toWrite);
         _vs.succeedVersion(newPath);
         if(cleanup) _vs.cleanup(4);
     }
