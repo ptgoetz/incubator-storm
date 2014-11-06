@@ -134,13 +134,10 @@ def exec_storm_class(klass, jvmtype="-server", jvmopts=[], extrajars=[], args=[]
         "-cp", get_classpath(extrajars),
     ] + jvmopts + [klass] + list(args)
     print "Running: " + " ".join(all_args)
-    if fork:
-        retCode = sub.call([JAVA_CMD] + all_args[1:])
-        #os.spawnvp(os.P_WAIT, JAVA_CMD, all_args)
+    if is_windows():
+        sub.call([JAVA_CMD] + all_args[1:])
     else:
-        pid = sub.Popen([JAVA_CMD] + all_args[1:])
-        #os.execvp(JAVA_CMD, all_args) # replaces the current process and never
-            # returns
+        os.execvp(JAVA_CMD, all_args) # replaces the current process and never returns
 
 def jar(jarfile, klass, *args):
     """Syntax: [storm-slider --app jar topology-jar-path class ...]
