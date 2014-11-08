@@ -979,7 +979,7 @@
           ganglia-conf (if (exists-file? conf-file-path) (clojure-from-yaml-file (File. conf-file-path)))
           interval-secs (if (not-nil? ganglia-conf) (get-in ganglia-conf [GangliaReporter/GANGLIA GangliaReporter/GANGLIA_REPORT_INTERVAL_SEC]))
           enable-ganglia (if (not-nil? ganglia-conf) (ganglia-conf  GangliaReporter/ENABLE_GANGLIA))
-          ganglia-reporter (if (not-nil? ganglia-conf)  (GangliaReporter. ganglia-conf) nil)
+          ganglia-reporter (if (and enable-ganglia (not-nil? ganglia-conf))   (GangliaReporter. ganglia-conf) nil)
           ]
       (if (and enable-ganglia (not-nil? ganglia-reporter))
         (when interval-secs
