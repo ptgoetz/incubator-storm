@@ -319,13 +319,6 @@ public class Config extends HashMap<String, Object> {
     public static final String NIMBUS_THRIFT_PORT = "nimbus.thrift.port";
     public static final Object NIMBUS_THRIFT_PORT_SCHEMA = ConfigValidation.IntegerValidator;
 
-
-    /**
-     * Thrift socket connection timeout millis.
-     */
-    public static final String STORM_THRIFT_TIMEOUT_MILLIS = "storm.thrift.timeoutMillis";
-    public static final Object STORM_THRIFT_TIMEOUT_MILLIS_SCHEMA = ConfigValidation.IntegerValidator;
-
     /**
      * The number of threads that should be used by the nimbus thrift server.
      */
