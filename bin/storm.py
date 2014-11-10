@@ -66,7 +66,7 @@ def get_jars_full(adir):
     files = os.listdir(adir)
     ret = []
     for f in files:
-        if f.endswith(".jar"):
+        if f.endswith(".jar") and not (os.path.islink(os.path.join(adir,f)) and not os.path.exists(os.readlink(os.path.join(adir,f)))):
             ret.append(adir + "/" + f)
     return ret
 

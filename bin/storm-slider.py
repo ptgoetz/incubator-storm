@@ -24,6 +24,9 @@ import subprocess as sub
 import re
 import shlex
 
+def is_windows():
+    return sys.platform.startswith('win')
+
 def identity(x):
     return x
 
@@ -46,16 +49,33 @@ if  SLIDER_DIR == None or (not os.path.exists(SLIDER_DIR)):
     sys.exit(1)
 
 USER_CONF_DIR = os.path.expanduser("~/.storm")
-STORM_DIR = os.getenv('STORM_BASE_DIR', None)
+
+if os.getenv('STORM_BASE_DIR', None) != None:
+    STORM_DIR = os.getenv('STORM_BASE_DIR', None)
+elif os.getenv('STORM_HOME', None) != None:
+    STORM_DIR = os.getenv('STORM_HOME', None)
+else:
+    print "Either STORM_BASE_DIR or STORM_HOME must be set."
+    sys.exit(1)
+
 CMD_OPTS = {}
 CONFIG_OPTS = []
 JAR_JVM_OPTS = shlex.split(os.getenv('STORM_JAR_JVM_OPTS', ''))
 pid = os.getpid()
-CONFFILE = tempfile.gettempdir()+"/storm."+str(pid)+".json"
-SLIDER_CLIENT_CONF = SLIDER_DIR + "/conf/slider-client.xml"
-SLIDER_REGISTRY_CMD = SLIDER_DIR+"/bin/slider"
+CONFFILE = os.path.join(tempfile.gettempdir(),"storm."+str(pid)+".json")
+SLIDER_CLIENT_CONF = os.path.join(SLIDER_DIR,'conf','slider-client.xml')
+SLIDER_CMD = os.path.join(SLIDER_DIR,'bin','slider.py')
 JAVA_HOME = os.getenv('JAVA_HOME', None)
 JAVA_CMD= 'java' if not JAVA_HOME else os.path.join(JAVA_HOME, 'bin', 'java')
+if is_windows():
+    JAVA_CMD = JAVA_CMD + '.exe'
+STORM_THRIFT_TRANSPORT_KEY = "storm.thrift.transport"
+NIMBUS_HOST_KEY = "nimbus.host"
+NIMBUS_THRIFT_PORT_KEY = "nimbus.thrift.port"
+
+if not os.path.isfile(JAVA_CMD):
+    print "Unable to find "+JAVA_CMD+" please check JAVA_HOME"
+    sys.exit(1)
 
 def get_config_opts():
     global CONFIG_OPTS
@@ -66,16 +86,18 @@ def get_jars_full(adir):
     ret = []
     for f in files:
         if f.endswith(".jar"):
-            ret.append(adir + "/" + f)
+            ret.append(os.path.join(adir, f))
     return ret
 
 def get_classpath(extrajars):
-    ret = (get_jars_full(STORM_DIR + "/lib"))
+    ret = (get_jars_full(os.path.join(STORM_DIR ,"lib")))
     ret.extend(extrajars)
-    return normclasspath(":".join(ret))
+
+    sep = ";" if is_windows() else ":"
+    return normclasspath(sep.join(ret))
 
 def print_remoteconfvalue(name):
-    """Syntax: [storm remoteconfvalue conf-name]
+    """Syntax: [storm-slider --app remoteconfvalue conf-name]
 
     Prints out the value for conf-name in the cluster's Storm configs.
     This command must be run on a cluster machine.
@@ -105,21 +127,20 @@ def parse_args(string):
 
 def exec_storm_class(klass, jvmtype="-server", jvmopts=[], extrajars=[], args=[], fork=False):
     global CONFFILE
-    storm_log_dir = STORM_DIR+"/logs"
+    storm_log_dir = os.path.join(STORM_DIR, "logs")
     all_args = [
         "java", jvmtype, get_config_opts(),
         "-Dstorm.home=" + STORM_DIR,
         "-cp", get_classpath(extrajars),
     ] + jvmopts + [klass] + list(args)
     print "Running: " + " ".join(all_args)
-    if fork:
-        os.spawnvp(os.P_WAIT, JAVA_CMD, all_args)
+    if is_windows():
+        sub.call([JAVA_CMD] + all_args[1:])
     else:
-        os.execvp(JAVA_CMD, all_args) # replaces the current process and never
-            # returns
+        os.execvp(JAVA_CMD, all_args) # replaces the current process and never returns
 
 def jar(jarfile, klass, *args):
-    """Syntax: [storm jar topology-jar-path class ...]
+    """Syntax: [storm-slider --app jar topology-jar-path class ...]
 
     Runs the main method of class with the specified arguments.
     The storm jars and configs in ~/.storm are put on the classpath.
@@ -130,12 +151,12 @@ def jar(jarfile, klass, *args):
     exec_storm_class(
         klass,
         jvmtype="-client",
-        extrajars=[jarfile, USER_CONF_DIR, STORM_DIR + "/bin"],
+        extrajars=[jarfile, USER_CONF_DIR, os.path.join(STORM_DIR ,"bin")],
         args=args,
         jvmopts=JAR_JVM_OPTS + ["-Dstorm.jar=" + jarfile])
 
 def kill(*args):
-    """Syntax: [storm kill topology-name [-w wait-time-secs]]
+    """Syntax: [storm-slider --app kill topology-name [-w wait-time-secs]]
 
     Kills the topology with the name topology-name. Storm will
     first deactivate the topology's spouts for the duration of
@@ -148,10 +169,10 @@ def kill(*args):
         "backtype.storm.command.kill_topology",
         args=args,
         jvmtype="-client",
-        extrajars=[USER_CONF_DIR, STORM_DIR + "/bin"])
+        extrajars=[USER_CONF_DIR, os.path.join(STORM_DIR , "bin")])
 
 def activate(*args):
-    """Syntax: [storm activate topology-name]
+    """Syntax: [storm-slider --app activate topology-name]
 
     Activates the specified topology's spouts.
     """
@@ -159,10 +180,10 @@ def activate(*args):
         "backtype.storm.command.activate",
         args=args,
         jvmtype="-client",
-        extrajars=[USER_CONF_DIR, STORM_DIR + "/bin"])
+        extrajars=[USER_CONF_DIR, os.path.join(STORM_DIR , "bin")])
 
 def listtopos(*args):
-    """Syntax: [storm list]
+    """Syntax: [storm-slider --app list]
 
     List the running topologies and their statuses.
     """
@@ -170,10 +191,10 @@ def listtopos(*args):
         "backtype.storm.command.list",
         args=args,
         jvmtype="-client",
-        extrajars=[USER_CONF_DIR, STORM_DIR + "/bin"])
+        extrajars=[USER_CONF_DIR, os.path.join(STORM_DIR , "bin")])
 
 def deactivate(*args):
-    """Syntax: [storm deactivate topology-name]
+    """Syntax: [storm-slider --app deactivate topology-name]
 
     Deactivates the specified topology's spouts.
     """
@@ -181,10 +202,10 @@ def deactivate(*args):
         "backtype.storm.command.deactivate",
         args=args,
         jvmtype="-client",
-        extrajars=[USER_CONF_DIR, STORM_DIR + "/bin"])
+        extrajars=[USER_CONF_DIR, os.path.join(STORM_DIR , "bin")])
 
 def rebalance(*args):
-    """Syntax: [storm rebalance topology-name [-w wait-time-secs] [-n new-num-workers] [-e component=parallelism]*]
+    """Syntax: [storm-slider --app rebalance topology-name [-w wait-time-secs] [-n new-num-workers] [-e component=parallelism]*]
 
     Sometimes you may wish to spread out where the workers for a topology
     are running. For example, let's say you have a 10 node cluster running
@@ -208,23 +229,26 @@ def rebalance(*args):
         "backtype.storm.command.rebalance",
         args=args,
         jvmtype="-client",
-        extrajars=[USER_CONF_DIR, STORM_DIR + "/bin"])
+        extrajars=[USER_CONF_DIR, os.path.join(STORM_DIR,"bin")])
 
 def version():
-    """Syntax: [storm version]
+    """Syntax: [storm-slider --app version]
     Prints the version number of this Storm release.
     """
-    releasefile = STORM_DIR + "/RELEASE"
+    releasefile = os.path.join(STORM_DIR, "RELEASE")
     if os.path.exists(releasefile):
         print open(releasefile).readline().strip()
     else:
         print "Unknown"
 
-def get_storm_config_json():
+def quicklinks():
+    """Syntax: [storm-slider --app  version]
+    Prints the quicklinks information of storm-slider registry"
+    """
     global CMD_OPTS
-    all_args = ["slider", "registry", "--getconf storm-site","--format json", "--dest "+CONFFILE]
+    all_args = ["slider", "registry", "--getconf", "quicklinks","--format", "json", "--name"]
     if 'app_name' in CMD_OPTS.keys():
-       all_args.append( "--name "+CMD_OPTS['app_name'])
+        all_args.append(CMD_OPTS['app_name'])
     else:
         print_usage()
         sys.exit(1)
@@ -232,7 +256,32 @@ def get_storm_config_json():
     if 'user' in CMD_OPTS.keys():
         all_args.append( "--user "+CMD_OPTS['user'])
 
-    os.spawnvp(os.P_WAIT,SLIDER_REGISTRY_CMD, all_args)
+    #os.spawnvp(os.P_WAIT,SLIDER_CMD, all_args)
+    cmd = [SLIDER_CMD] + all_args[1:]
+    if is_windows():
+        cmd = ['python'] + cmd
+
+    sub.call(cmd)
+
+def get_storm_config_json():
+    global CMD_OPTS
+    all_args = ["slider.py", "registry", "--getconf", "storm-site","--format", "json", "--dest", CONFFILE, "--name"]
+    if 'app_name' in CMD_OPTS.keys():
+       all_args.append(CMD_OPTS['app_name'])
+    else:
+        print_usage()
+        sys.exit(1)
+
+    if 'user' in CMD_OPTS.keys():
+        all_args.append( "--user "+CMD_OPTS['user'])
+
+    #os.spawnvp(os.P_WAIT,SLIDER_CMD, all_args)
+    cmd = [SLIDER_CMD] + all_args[1:]
+
+    if is_windows():
+        cmd = ['python'] + cmd
+
+    sub.call(cmd)
     if not os.path.exists(CONFFILE):
         print "Failed to read slider deployed storm config"
         sys.exit(1)
@@ -242,11 +291,8 @@ def storm_conf_values(keys):
     data = json.load(file)
     storm_args = []
     for key in keys:
-        try:
+        if data.has_key(key):
             storm_args.append(key+"="+data[key])
-        except KeyError:
-            print "Unable to find "+key
-            sys.exit(1)
     return storm_args
 
 def print_commands():
@@ -274,7 +320,7 @@ def unknown_command(*args):
 
 COMMANDS = {"jar": jar, "kill": kill, "remoteconfvalue": print_remoteconfvalue,
             "activate": activate, "deactivate": deactivate, "rebalance": rebalance, "help": print_usage,
-            "list": listtopos, "version": version}
+            "list": listtopos, "version": version, "quicklinks" : quicklinks}
 
 def parse_config(config_list):
     global CONFIG_OPTS
@@ -309,10 +355,16 @@ def main():
     ARGS = args[1:]
     if (COMMAND != 'help'):
         get_storm_config_json()
-        storm_conf = storm_conf_values(["nimbus.host","nimbus.thrift.port"])
+        storm_conf = storm_conf_values([NIMBUS_HOST_KEY,NIMBUS_THRIFT_PORT_KEY,STORM_THRIFT_TRANSPORT_KEY])
         parse_config(storm_conf)
-    (COMMANDS.get(COMMAND, unknown_command))(*ARGS)
-    os.remove(CONFFILE)
+    try:
+        (COMMANDS.get(COMMAND, unknown_command))(*ARGS)
+    except:
+        print "Unexpected error:", sys.exc_info()[0]
+        raise
+    finally:
+        if (os.path.isfile(CONFFILE)):
+            os.remove(CONFFILE)
 
 if __name__ == "__main__":
     main()

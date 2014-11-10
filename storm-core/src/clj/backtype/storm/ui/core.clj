@@ -501,19 +501,21 @@
         (cluster-summary (.getClusterInfo ^Nimbus$Client nimbus) user)))
   ([^ClusterSummary summ user]
      (let [sups (.get_supervisors summ)
-        used-slots (reduce + (map #(.get_num_used_workers ^SupervisorSummary %) sups))
-        total-slots (reduce + (map #(.get_num_workers ^SupervisorSummary %) sups))
-        free-slots (- total-slots used-slots)
-        total-tasks (->> (.get_topologies summ)
+           used-slots (reduce + (map #(.get_num_used_workers ^SupervisorSummary %) sups))
+           total-slots (reduce + (map #(.get_num_workers ^SupervisorSummary %) sups))
+           free-slots (- total-slots used-slots)
+           topologies (.get_topologies_size summ)
+           total-tasks (->> (.get_topologies summ)
                          (map #(.get_num_tasks ^TopologySummary %))
                          (reduce +))
-        total-executors (->> (.get_topologies summ)
+           total-executors (->> (.get_topologies summ)
                              (map #(.get_num_executors ^TopologySummary %))
                              (reduce +))]
        {"user" user
         "stormVersion" (read-storm-version)
         "nimbusUptime" (pretty-uptime-sec (.get_nimbus_uptime_secs summ))
         "supervisors" (count sups)
+        "topologies" topologies
         "slotsTotal" total-slots
         "slotsUsed"  used-slots
         "slotsFree" free-slots
@@ -975,9 +977,9 @@
           file-sep (.toString file-path-separator)
           conf-file-path (str storm-home (when-not (.endsWith storm-home file-sep) file-sep) "conf" file-sep "config.yaml")
           ganglia-conf (if (exists-file? conf-file-path) (clojure-from-yaml-file (File. conf-file-path)))
-          interval-secs (get-in ganglia-conf [GangliaReporter/GANGLIA GangliaReporter/GANGLIA_REPORT_INTERVAL_SEC])
-          enable-ganglia (ganglia-conf  GangliaReporter/ENABLE_GANGLIA)
-          ganglia-reporter (if (not-nil? ganglia-conf)  (GangliaReporter. ganglia-conf) nil)
+          interval-secs (if (not-nil? ganglia-conf) (get-in ganglia-conf [GangliaReporter/GANGLIA GangliaReporter/GANGLIA_REPORT_INTERVAL_SEC]))
+          enable-ganglia (if (not-nil? ganglia-conf) (ganglia-conf  GangliaReporter/ENABLE_GANGLIA))
+          ganglia-reporter (if (and enable-ganglia (not-nil? ganglia-conf))   (GangliaReporter. ganglia-conf) nil)
           ]
       (if (and enable-ganglia (not-nil? ganglia-reporter))
         (when interval-secs

@@ -115,7 +115,7 @@ public class Config extends HashMap<String, Object> {
      */
     public static final String STORM_META_SERIALIZATION_DELEGATE = "storm.meta.serialization.delegate";
     public static final Object STORM_META_SERIALIZATION_DELEGATE_SCHEMA = String.class;
-    
+
     /**
      * A list of hosts of ZooKeeper servers used to manage the cluster.
      */
@@ -338,6 +338,13 @@ public class Config extends HashMap<String, Object> {
      */
     public static final String NIMBUS_ADMINS = "nimbus.admins";
     public static final Object NIMBUS_ADMINS_SCHEMA = ConfigValidation.StringsValidator;
+
+    /**
+     * A white list of users that are cluster users and only the ones allowed to run user command.
+     * To use this set nimbus.authorizer to backtype.storm.security.auth.authorizer.SimpleACLAuthorizer
+     */
+    public static final String NIMBUS_USERS = "nimbus.users";
+    public static final Object NIMBUS_USERS_SCHEMA = ConfigValidation.StringsValidator;
 
     /**
      * A list of users that run the supervisors and should be authorized to interact with
@@ -776,7 +783,7 @@ public class Config extends HashMap<String, Object> {
      * The jvm opts provided to workers launched by this supervisor. All "%ID%", "%WORKER-ID%", "%TOPOLOGY-ID%"
      * and "%WORKER-PORT%" substrings are replaced with:
      * %ID%          -> port (for backward compatibility),
-     * %WORKER-ID%   -> worker-id, 
+     * %WORKER-ID%   -> worker-id,
      * %TOPOLOGY-ID%    -> topology-id,
      * %WORKER-PORT% -> port.
      */
@@ -834,6 +841,13 @@ public class Config extends HashMap<String, Object> {
      */
     public static final String TOPOLOGY_USERS = "topology.users";
     public static final Object TOPOLOGY_USERS_SCHEMA = ConfigValidation.StringsValidator;
+
+    /**
+     * A list of groups that are allowed to interact with the topology.  To use this set
+     * nimbus.authorizer to backtype.storm.security.auth.authorizer.SimpleACLAuthorizer
+     */
+    public static final String TOPOLOGY_GROUPS = "topology.groups";
+    public static final Object TOPOLOGY_GROUPS_SCHEMA = ConfigValidation.StringsValidator;
 
     /**
      * True if Storm should timeout messages or not. Defaults to true. This is meant to be used
@@ -1310,7 +1324,7 @@ public class Config extends HashMap<String, Object> {
     public void registerSerialization(Class klass, Class<? extends Serializer> serializerClass) {
         registerSerialization(this, klass, serializerClass);
     }
-    
+
     public static void registerMetricsConsumer(Map conf, Class klass, Object argument, long parallelismHint) {
         HashMap m = new HashMap();
         m.put("class", klass.getCanonicalName());

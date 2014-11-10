@@ -48,8 +48,9 @@ public class SimpleACLAuthorizer implements IAuthorizer {
 
     protected Set<String> _admins;
     protected Set<String> _supervisors;
+    protected Set<String> _whiteListUsers;
     protected IPrincipalToLocal _ptol;
-    protected IGroupMappingServiceProvider _groups;
+    protected IGroupMappingServiceProvider _groupMappingProvider;
     /**
      * Invoked once immediately after construction
      * @param conf Storm configuration
@@ -58,6 +59,7 @@ public class SimpleACLAuthorizer implements IAuthorizer {
     public void prepare(Map conf) {
         _admins = new HashSet<String>();
         _supervisors = new HashSet<String>();
+        _whiteListUsers = new HashSet<String>();
 
         if (conf.containsKey(Config.NIMBUS_ADMINS)) {
             _admins.addAll((Collection<String>)conf.get(Config.NIMBUS_ADMINS));
@@ -65,8 +67,12 @@ public class SimpleACLAuthorizer implements IAuthorizer {
         if (conf.containsKey(Config.NIMBUS_SUPERVISOR_USERS)) {
             _supervisors.addAll((Collection<String>)conf.get(Config.NIMBUS_SUPERVISOR_USERS));
         }
+        if (conf.containsKey(Config.NIMBUS_USERS)) {
+            _whiteListUsers.addAll((Collection<String>)conf.get(Config.NIMBUS_USERS));
+        }
+
         _ptol = AuthUtils.GetPrincipalToLocalPlugin(conf);
-        _groups = AuthUtils.GetGroupMappingServiceProviderPlugin(conf);
+        _groupMappingProvider = AuthUtils.GetGroupMappingServiceProviderPlugin(conf);
     }
 
     /**
@@ -95,7 +101,10 @@ public class SimpleACLAuthorizer implements IAuthorizer {
         }
 
         if (_userCommands.contains(operation)) {
-            return true;
+            if (_whiteListUsers.size() > 0 && _whiteListUsers.contains(user))
+                return true;
+            else if (_whiteListUsers.size() == 0)
+                return true;
         }
 
         if (_topoCommands.contains(operation)) {
@@ -107,12 +116,16 @@ public class SimpleACLAuthorizer implements IAuthorizer {
             if (topoUsers.contains(principal) || topoUsers.contains(user)) {
                 return true;
             }
-            if(_groups != null) {
+
+            Set<String> topoGroups = new HashSet<String>();
+            if (topology_conf.containsKey(Config.TOPOLOGY_GROUPS)) {
+                topoGroups.addAll((Collection<String>)topology_conf.get(Config.TOPOLOGY_GROUPS));
+            }
+
+            if(_groupMappingProvider != null && topoGroups.size() > 0) {
                 try {
-                    String topologySubmitterUser = (String) topology_conf.get(Config.TOPOLOGY_SUBMITTER_USER);
-                    Set<String> userGroups = _groups.getGroups(user);
-                    Set<String> topoUserGroups = _groups.getGroups(topologySubmitterUser);
-                    for (String tgroup : topoUserGroups) {
+                    Set<String> userGroups = _groupMappingProvider.getGroups(user);
+                    for (String tgroup : topoGroups) {
                         if(userGroups.contains(tgroup))
                             return true;
                     }

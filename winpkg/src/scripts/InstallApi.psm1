@@ -75,8 +75,8 @@ function Install(
         ### $stormInstallPath: the name of the folder containing the application, after unzipping
         $stormInstallPath = Join-Path $nodeInstallRoot $FinalName
         $stormInstallToBin = Join-Path "$stormInstallPath" "bin"
-		
-	    Write-Log "Installing Apache $FinalName to $stormInstallPath"
+
+        Write-Log "Installing Apache $FinalName to $stormInstallPath"
 
         ### Create Node Install Root directory
         if( -not (Test-Path "$stormInstallPath"))
@@ -106,7 +106,7 @@ function Install(
         {
             $shellApplication = new-object -com shell.application
             $zipPackage = $shellApplication.NameSpace("$HDP_RESOURCES_DIR\$FinalName.zip")
-            $destinationFolder = $shellApplication.NameSpace($stormInstallPath)
+            $destinationFolder = $shellApplication.NameSpace($nodeInstallRoot)
             $destinationFolder.CopyHere($zipPackage.Items(), 20)
         }
 		
@@ -136,7 +136,7 @@ function Install(
 		Write-Log "Node storm Role Services: $roles"
 
 		### Verify that roles are in the supported set	
-		CheckRole $roles @("supervisor", "nimbus", "ui", "logviewer")
+		CheckRole $roles @("supervisor", "nimbus", "ui", "logviewer", "drpc")
 		Write-Log "Role : $roles"
 		foreach( $service in empty-null ($roles -Split('\s+')))
 		{
@@ -317,7 +317,7 @@ function StopService(
 ###     component: Component to be configured, it should be "storm"
 ###     nodeInstallRoot: Target install folder (for example "C:\Hadoop")
 ###     serviceCredential: Credential object used for service creation
-###     configs: 
+###     configs: Storm configuration that is going to overwrite the default
 ###
 ###############################################################################
 function Configure(
@@ -343,41 +343,16 @@ function Configure(
     {
         Write-Log "Configuring storm"
         Write-Log "Changing storm.yaml"
-        $ENV:STORM_NIMBUS_LOCAL_DIR = $ENV:HDP_DATA_DIR.Replace('\\', '\')
-        $ENV:STORM_NIMBUS_LOCAL_DIR = $ENV:STORM_NIMBUS_LOCAL_DIR.Replace('\', '\\')
         $yaml_file = "$ENV:STORM_HOME\conf\storm.yaml"
-        $content = Get-Content $yaml_file
-        $content+=@("storm.zookeeper.servers:")
-        $zookeeper_hosts = ($ENV:ZOOKEEPER_HOSTS.Split(",") | foreach { $_.Trim() })
-        foreach ($shost in $zookeeper_hosts)
-        {
-            $content+= ('- "'+$shost+'"')
-        }
-        $content+= @(('nimbus.host: "'+$ENV:STORM_NIMBUS+'"'),
-        ('storm.local.dir: "'+$ENV:STORM_NIMBUS_LOCAL_DIR+'"'),
-        "logviewer.port: 8081",
-        "storm.messaging.transport: backtype.storm.messaging.netty.Context",
-        "storm.messaging.netty.buffer_size: 16384",
-        "storm.messaging.netty.max_retries: 10",
-        "storm.messaging.netty.min_wait_ms: 1000",
-        "storm.messaging.netty.max_wait_ms: 5000",
-        "ui.port: 8772")
-        Set-Content -Value $content -Path $yaml_file -Force
 
-        ###
-        ### ACL Storm logs directory such that machine users can write to it
-        ###
-        if(Test-Path ENV:STORM_LOG_DIR)
+        $active_config = GetDefaultConfig
+        # Overwrite default configuration with user supplied configuration
+        foreach($c in $configs.GetEnumerator())
         {
-            $stormlogdir = $ENV:STORM_LOG_DIR
+            $active_config[$c.Key] = $c.Value
         }
-        if( -not (Test-Path "$stormlogdir"))
-        {
-            Write-Log "Creating Storm logs folder"
-            $cmd = "mkdir `"$stormlogdir`""
-            Invoke-CmdChk $cmd
-        }
-        GiveFullPermissions "$stormlogdir" "Users"
+        WriteYamlConfigFile $yaml_file $active_config
+
         Write-Log "Configuration of storm is finished"
     }
     else
@@ -386,32 +361,58 @@ function Configure(
     }
 }
 
+### Return default Storm configuration which will be overwritten
+### by user provided values
+function GetDefaultConfig()
+{
+    return @{"logviewer.port" = 8081;
+        "storm.messaging.transport" = "backtype.storm.messaging.netty.Context";
+        "storm.messaging.netty.buffer_size" = 16384;
+        "storm.messaging.netty.max_retries" = 10;
+        "storm.messaging.netty.min_wait_ms" = 1000;
+        "storm.messaging.netty.max_wait_ms" = 5000;
+        "ui.port" = 8772;
+        "drpc.port" = 3772}
+}
+
+### Helper routine that write the given fileName Yaml file with the given
+### key/value configuration values.
+function WriteYamlConfigFile(
+    [String]
+    [parameter( Position=0, Mandatory=$true )]
+    $fileName,
+    [hashtable]
+    [parameter( Position=1, Mandatory=$true )]
+    $configs = @{}
+)
+{
+    $content = ""
+    foreach ($item in $configs.GetEnumerator())
+    {
+        if (($item.Key.CompareTo("storm.zookeeper.servers") -eq 0) -or ($item.Key.CompareTo("drpc.servers") -eq 0))
+        {
+            # zookeeper and drpc servers need to be configured as a list
+            $content += $item.Key + ": " + "`r`n"
+            $hosts = ($item.Value.Split(",") | foreach { $_.Trim() })
+            foreach ($shost in $hosts)
+            {
+                $content += ('- "' + $shost + '"'+ "`r`n")
+            }
+        }
+        else
+        {
+            $content += $item.Key + ": " + $item.Value + "`r`n"
+        }
+    }
+    Set-Content $fileName $content -Force
+}
+
 
 ### Helper routing that converts a $null object to nothing. Otherwise, iterating over
 ### a $null object with foreach results in a loop with one $null element.
 function empty-null($obj)
 {
    if ($obj -ne $null) { $obj }
-}
-
-### Gives full permissions on the folder to the given user 
-function GiveFullPermissions(
-    [String]
-    [Parameter( Position=0, Mandatory=$true )]
-    $folder,
-    [String]
-    [Parameter( Position=1, Mandatory=$true )]
-    $username,
-    [bool]
-    [Parameter( Position=2, Mandatory=$false )]
-    $recursive = $false)
-{
-    Write-Log "Giving user/group `"$username`" full permissions to `"$folder`""
-    $cmd = "icacls `"$folder`" /grant ${username}:(OI)(CI)F"
-    if ($recursive) {
-        $cmd += " /T"
-    }
-    Invoke-CmdChk $cmd
 }
 
 ### Checks if the given space separated roles are in the given array of

@@ -79,8 +79,8 @@ public class PersistentWordCount {
         } else if (args.length == 4) {
             System.out.println("hdfs url: " + args[0] + ", keytab file: " + args[2] + 
                 ", principal name: " + args[3] + ", toplogy name: " + args[1]);
-            config.put(HBaseSecurityUtil.STORM_KEYTAB_FILE_KEY, args[2]);
-            config.put(HBaseSecurityUtil.STORM_USER_NAME_KEY, args[3]);
+            hbConf.put(HBaseSecurityUtil.STORM_KEYTAB_FILE_KEY, args[2]);
+            hbConf.put(HBaseSecurityUtil.STORM_USER_NAME_KEY, args[3]);
             config.setNumWorkers(3);
             StormSubmitter.submitTopology(args[1], config, builder.createTopology());
         } else {
