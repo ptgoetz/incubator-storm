@@ -112,6 +112,7 @@ public class HiveBolt extends  BaseRichBolt {
             collector.ack(tuple);
         } catch(Exception e) {
             collector.fail(tuple);
+            flushAndCloseWriters();
             LOG.warn("hive streaming failed. ",e);
         }
     }
@@ -173,6 +174,33 @@ public class HiveBolt extends  BaseRichBolt {
         throws HiveWriter.CommitFailure, HiveWriter.TxnBatchFailure, HiveWriter.TxnFailure, InterruptedException {
         for(HiveWriter writer: allWriters.values()) {
             writer.flush(true);
+        }
+    }
+
+    /**
+     * Closes all writers and remove them from cache
+     * @return number of writers retired
+     */
+    private void closeAllWriters() {
+        try {
+            //1) Retire writers
+            for (Entry<HiveEndPoint,HiveWriter> entry : allWriters.entrySet()) {
+                entry.getValue().close();
+            }
+            //2) Clear cache
+            allWriters.clear();
+        } catch(Exception e) {
+            LOG.warn("unable to close writers. ", e);
+        }
+    }
+
+    private void flushAndCloseWriters() {
+        try {
+            flushAllWriters();
+        } catch(Exception e) {
+            LOG.warn("unable to flush hive writers. ", e);
+        } finally {
+            closeAllWriters();
         }
     }
 

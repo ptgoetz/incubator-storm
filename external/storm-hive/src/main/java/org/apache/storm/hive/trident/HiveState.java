@@ -108,6 +108,7 @@ public class HiveState implements State {
         try {
             writeTuples(tuples);
         } catch (Exception e) {
+            abortAndCloseWriters();
             LOG.warn("hive streaming failed.",e);
             throw new FailedException(e);
         }
@@ -129,6 +130,41 @@ public class HiveState implements State {
                 currentBatchSize = 0;
             }
         }
+    }
+
+    private void abortAndCloseWriters() {
+        try {
+            abortAllWriters();
+            closeAllWriters();
+        } catch(InterruptedException e) {
+            LOG.warn("unable to close hive connections. ", e);
+        } catch(IOException ie) {
+            LOG.warn("unable to close hive connections. ", ie);
+        }
+    }
+
+    /**
+     * Abort current Txn on all writers
+     * @return number of writers retired
+     */
+    private void abortAllWriters() throws InterruptedException {
+        for (Entry<HiveEndPoint,HiveWriter> entry : allWriters.entrySet()) {
+            entry.getValue().abort();
+        }
+    }
+
+
+    /**
+     * Closes all writers and remove them from cache
+     * @return number of writers retired
+     */
+    private void closeAllWriters() throws InterruptedException, IOException {
+        //1) Retire writers
+        for (Entry<HiveEndPoint,HiveWriter> entry : allWriters.entrySet()) {
+            entry.getValue().close();
+        }
+        //2) Clear cache
+        allWriters.clear();
     }
 
     private void setupHeartBeatTimer() {

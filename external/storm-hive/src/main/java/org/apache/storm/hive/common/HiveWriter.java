@@ -277,6 +277,35 @@ public class HiveWriter {
     }
 
     /**
+     * Aborts the current Txn and switches to next Txn.
+     * @throws StreamingException if could not get new Transaction Batch, or switch to next Txn
+     */
+    public void abort() throws InterruptedException {
+        abortTxn();
+    }
+
+    private void abortTxn() throws InterruptedException {
+        LOG.info("Aborting Txn id {} on End Point {}", txnBatch.getCurrentTxnId(), endPoint);
+        try {
+            callWithTimeout(new CallRunner<Void>() {
+                    @Override
+                        public Void call() throws StreamingException, InterruptedException {
+                        txnBatch.abort(); // could block
+                        return null;
+                    }
+                });
+        } catch (InterruptedException e) {
+            throw e;
+        } catch (TimeoutException e) {
+            LOG.warn("Timeout while aborting Txn " + txnBatch.getCurrentTxnId() + " on EndPoint: " + endPoint, e);
+        } catch (Exception e) {
+            LOG.warn("Error aborting Txn " + txnBatch.getCurrentTxnId() + " on EndPoint: " + endPoint, e);
+            // Suppressing exceptions as we don't care for errors on abort
+        }
+    }
+
+
+    /**
      * If the current thread has been interrupted, then throws an
      * exception.
      * @throws InterruptedException
