@@ -62,12 +62,14 @@ public class TridentHiveTopology {
                 .withTxnsPerBatch(10)
                 .withBatchSize(batchSize)
                 .withIdleTimeout(10)
+                .withCallTimeout(30000)
                 .withKerberosKeytab((String)keytab)
                 .withKerberosPrincipal((String)principal);
         } else  {
             hiveOptions = new HiveOptions(metaStoreURI,dbName,tblName,mapper)
                 .withTxnsPerBatch(10)
                 .withBatchSize(batchSize)
+                .withCallTimeout(30000)
                 .withIdleTimeout(10);
         }
         StateFactory factory = new HiveStateFactory().withOptions(hiveOptions);
