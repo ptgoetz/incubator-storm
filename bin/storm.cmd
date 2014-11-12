@@ -56,7 +56,7 @@ if "%1" == "--service" (
   )
 
   call :make_command_arguments %*
-  
+
   if not defined STORM_LOG_FILE (
     set STORM_LOG_FILE=-Dlogfile.name=%storm-command%.log
   )
@@ -71,7 +71,7 @@ if "%1" == "--service" (
 
   set corecommands=activate deactivate dev-zookeeper drpc kill list nimbus logviewer rebalance remoteconfvalue repl shell supervisor ui
   for %%i in ( %corecommands% ) do (
-    if %storm-command% == %%i set corecommand=true  
+    if %storm-command% == %%i set corecommand=true
   )
   if defined corecommand (
     call :%storm-command% %storm-command-arguments%
@@ -85,12 +85,12 @@ if "%1" == "--service" (
     set CLASS=%3
     set storm-command-arguments=%4 %5 %6 %7 %8 %9
   )
-  
+
   if not defined STORM_LOG_FILE (
     set STORM_LOG_FILE=-Dlogfile.name=%storm-command%.log
   )
 
-  if defined STORM_DEBUG ( 
+  if defined STORM_DEBUG (
     %JAVA% %JAVA_HEAP_MAX% %STORM_OPTS% %STORM_LOG_FILE% %CLASS% %storm-command-arguments%
   )
   set path=%PATH%;%STORM_BIN_DIR%;%STORM_SBIN_DIR%
@@ -109,7 +109,7 @@ if "%1" == "--service" (
   goto :eof
 
 :classpath
-  echo %CLASSPATH% 
+  echo %CLASSPATH%
   goto :eof
 
 :deactivate
@@ -124,8 +124,8 @@ if "%1" == "--service" (
 
 :drpc
   set CLASS=backtype.storm.daemon.drpc
-  %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value drpc.childopts > temp.txt
-  FOR /F "delims=" %%i in (temp.txt) do (
+  %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value drpc.childopts > %CMD_TEMP_FILE%
+  FOR /F "delims=" %%i in (%CMD_TEMP_FILE%) do (
      FOR /F "tokens=1,* delims= " %%a in ("%%i") do (
 	  if %%a == VALUE: (
 	   set CHILDOPTS=%%b
@@ -150,8 +150,8 @@ if "%1" == "--service" (
 
 :logviewer
   set CLASS=backtype.storm.daemon.logviewer
-   %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value logviewer.childopts > temp.txt
-  FOR /F "delims=" %%i in (temp.txt) do (
+   %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value logviewer.childopts > %CMD_TEMP_FILE%
+  FOR /F "delims=" %%i in (%CMD_TEMP_FILE%) do (
      FOR /F "tokens=1,* delims= " %%a in ("%%i") do (
 	  if %%a == VALUE: (
 	   set CHILDOPTS=%%b
@@ -162,8 +162,8 @@ if "%1" == "--service" (
 
 :nimbus
   set CLASS=backtype.storm.daemon.nimbus
-  %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value nimbus.childopts > temp.txt
-  FOR /F "delims=" %%i in (temp.txt) do (
+  %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value nimbus.childopts > %CMD_TEMP_FILE%
+  FOR /F "delims=" %%i in (%CMD_TEMP_FILE%) do (
      FOR /F "tokens=1,* delims= " %%a in ("%%i") do (
 	  if %%a == VALUE: (
 	   set CHILDOPTS=%%b
@@ -189,13 +189,13 @@ if "%1" == "--service" (
 
 :shell
   set CLASS=backtype.storm.command.shell_submission
-  set STORM_OPTS=%STORM_CLIENT_OPTS% %STORM_OPTS% 
+  set STORM_OPTS=%STORM_CLIENT_OPTS% %STORM_OPTS%
   goto :eof
-  
+
 :supervisor
   set CLASS=backtype.storm.daemon.supervisor
-  %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value supervisor.childopts > temp.txt
-  FOR /F "delims=" %%i in (temp.txt) do (
+  %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value supervisor.childopts > %CMD_TEMP_FILE%
+  FOR /F "delims=" %%i in (%CMD_TEMP_FILE%) do (
      FOR /F "tokens=1,* delims= " %%a in ("%%i") do (
 	  if %%a == VALUE: (
 	   set CHILDOPTS=%%b
@@ -207,8 +207,8 @@ if "%1" == "--service" (
 :ui
   set CLASS=backtype.storm.ui.core
   set CLASSPATH=%CLASSPATH%;%STORM_HOME%
-  %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value ui.childopts > temp.txt
-  FOR /F "delims=" %%i in (temp.txt) do (
+  %JAVA% -client -Dstorm.options= -Dstorm.conf.file= -cp %CLASSPATH% backtype.storm.command.config_value ui.childopts > %CMD_TEMP_FILE%
+  FOR /F "delims=" %%i in (%CMD_TEMP_FILE%) do (
      FOR /F "tokens=1,* delims= " %%a in ("%%i") do (
 	  if %%a == VALUE: (
 	   set CHILDOPTS=%%b
@@ -240,8 +240,8 @@ if "%1" == "--service" (
   shift
   set _stormarguments=
 
-  :MakeCmdArgsLoop 
-  if [%1]==[] goto :EndLoop 
+  :MakeCmdArgsLoop
+  if [%1]==[] goto :EndLoop
 
   if not defined _stormarguments (
     set _stormarguments=%1
@@ -249,14 +249,14 @@ if "%1" == "--service" (
     set _stormarguments=!_stormarguments! %1
   )
   shift
-  goto :MakeCmdArgsLoop 
+  goto :MakeCmdArgsLoop
   :EndLoop
   set storm-command-arguments=%_stormarguments%
   goto :eof
-  
+
 :set_childopts
   set STORM_OPTS=%STORM_SERVER_OPTS% %STORM_OPTS% %CHILDOPTS%
-  del /F temp.txt
+  del /F %CMD_TEMP_FILE%
   goto :eof
 
 :print_usage
