@@ -64,7 +64,7 @@ public class TransactionalState {
             Object port = getWithBackup(conf, Config.TRANSACTIONAL_ZOOKEEPER_PORT, Config.STORM_ZOOKEEPER_PORT);
             ZookeeperAuthInfo auth = new ZookeeperAuthInfo(conf);
             CuratorFramework initter = Utils.newCuratorStarted(conf, servers, port, auth);
-            _zkAcls = Utils.getWorkerACL(conf);
+            //_zkAcls = Utils.getWorkerACL(conf);
             try {
                 TransactionalState.createNode(initter, transactionalRoot, null, null, null);
             } catch (KeeperException.NodeExistsException e) {
