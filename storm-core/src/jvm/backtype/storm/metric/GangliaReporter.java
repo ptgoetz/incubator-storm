@@ -33,7 +33,7 @@ import java.util.TimerTask;
  *   ganglia.port: the port to send the event to. default is 8649
  *   ganglia.reportIntervalSeconds : interval in seconds to send metrics to ganglia.
  */
-public class GangliaReporter {
+public class GangliaReporter implements IClusterReporter {
     private static final Logger LOG = LoggerFactory.getLogger(GangliaReporter.class);
 
     /*
@@ -64,25 +64,29 @@ public class GangliaReporter {
     private GMetric ganglia;
     NimbusClient nimbusClient;
 
-    public GangliaReporter(Map conf) {
+    public GangliaReporter() {
+    }
+
+    public void prepare(Map conf) {
         try {
             Validate.notNull(conf.get(GANGLIA), GANGLIA + " can not be null");
             Map gangliaConf = (Map) conf.get(GANGLIA);
             GMetric.UDPAddressingMode mode =
-                    "UNICAST".equalsIgnoreCase((String) gangliaConf.get(GANGLIA_MODE)) ? GMetric.UDPAddressingMode.UNICAST : GMetric.UDPAddressingMode.MULTICAST;
+                "UNICAST".equalsIgnoreCase((String) gangliaConf.get(GANGLIA_MODE)) ? GMetric.UDPAddressingMode.UNICAST : GMetric.UDPAddressingMode.MULTICAST;
 
             this.ganglia = new GMetric(
-                    gangliaConf.get(GANGLIA_HOST).toString(),
-                    gangliaConf.get(GANGLIA_PORT) != null ? Integer.parseInt(gangliaConf.get(GANGLIA_PORT).toString()) : 8649,
-                    mode,
-                    1,
-                    true,
-                    null);
+                                       gangliaConf.get(GANGLIA_HOST).toString(),
+                                       gangliaConf.get(GANGLIA_PORT) != null ? Integer.parseInt(gangliaConf.get(GANGLIA_PORT).toString()) : 8649,
+                                       mode,
+                                       1,
+                                       true,
+                                       null);
             Map stormConf = Utils.readStormConfig();
             this.nimbusClient = NimbusClient.getConfiguredClient(stormConf);
         } catch (Exception e) {
             LOG.warn("could not initialize ganglia, please specify host, port [default 8649], mode [default MULTICAST] under STORM_HOME/conf/config.yaml ", e);
         }
+
     }
 
 

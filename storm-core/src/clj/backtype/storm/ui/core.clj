@@ -968,26 +968,40 @@
 (defn start-ganglia-reporter!
   []
   (try
-    (let [storm-home (System/getProperty "storm.home")
+    (let [conf *STORM-CONF*
+          storm-home (System/getProperty "storm.home")
           ; this is needed for compilation to succeed, during compile storm-home may not be set
           ; but as we are initializing ganglia-reporter to keep the ref around
           ; it ends up calling storm-home and .toString will throw NPE failing the compilation
           ; in real runTime storm-home will never be null.
           storm-home (if storm-home (.toString storm-home) "")
+          storm-metrics-reporter-class (conf "metrics.reporter.register")
           file-sep (.toString file-path-separator)
           conf-file-path (str storm-home (when-not (.endsWith storm-home file-sep) file-sep) "conf" file-sep "config.yaml")
           ganglia-conf (if (exists-file? conf-file-path) (clojure-from-yaml-file (File. conf-file-path)))
           interval-secs (if (not-nil? ganglia-conf) (get-in ganglia-conf [GangliaReporter/GANGLIA GangliaReporter/GANGLIA_REPORT_INTERVAL_SEC]))
-          enable-ganglia (if (not-nil? ganglia-conf) (ganglia-conf  GangliaReporter/ENABLE_GANGLIA))
-          ganglia-reporter (if (and enable-ganglia (not-nil? ganglia-conf))   (GangliaReporter. ganglia-conf) nil)
+          enable-ganglia (if (not-nil? ganglia-conf) (ganglia-conf  GangliaReporter/ENABLE_GANGLIA) false)
+          ganglia-reporter (if (and enable-ganglia (not-nil? ganglia-conf))   (GangliaReporter.) nil)
+          enable-metrics (if (not-nil? ganglia-conf) (ganglia-conf "enableMetricsSink") false)
+          metrics-reporter (if (and enable-metrics (not-nil? ganglia-conf) (not-nil? storm-metrics-reporter-class)) (new-instance storm-metrics-reporter-class) nil)
           ]
       (if (and enable-ganglia (not-nil? ganglia-reporter))
         (when interval-secs
-          (log-debug "starting ganglia reporter thread at interval: " interval-secs)
+          (.prepare ganglia-reporter ganglia-conf)
+          (log-message "starting ganglia reporter thread at interval: " interval-secs)
           (schedule-recurring (mk-timer :thread-name "ganglia-reporter")
                           0 ;; Start immediately.
                           interval-secs
-                          (fn [] (.reportMetrics ganglia-reporter))))))
+                          (fn [] (.reportMetrics ganglia-reporter))))
+        (if (and enable-metrics (not-nil? metrics-reporter))
+          (when interval-secs
+            (.prepare metrics-reporter ganglia-conf)
+            (log-message "starting metrics reporter thread at interval: " interval-secs)
+            (schedule-recurring (mk-timer :thread-name "metrics-reporter")
+                                0 ;; Start immediately.
+                                interval-secs
+                                (fn [] (.reportMetrics metrics-reporter)))))
+        ))
     (catch Exception ex
       (log-error ex))))
 
