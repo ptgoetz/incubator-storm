@@ -243,8 +243,7 @@ Note that if anything goes wrong, this will throw an Error and exit."
     (let [file (.getCanonicalFile (File. root-dir fname))
           file-length (.length file)
           path (.getCanonicalPath file)]
-      (if (= (File. root-dir)
-             (.getParentFile file))
+      (if (.exists file)
         (let [default-length 51200
               length (if length
                        (min 10485760 length)
@@ -351,7 +350,7 @@ Note that if anything goes wrong, this will throw an Error and exit."
                           [{:filter-class "org.eclipse.jetty.servlets.GzipFilter"
                             :filter-name "Gzipper"
                             :filter-params {}}])]
-      (run-jetty middle 
+      (run-jetty middle
                         {:port (int (conf LOGVIEWER-PORT))
                          :join? false
                          :configurator (fn [server]
