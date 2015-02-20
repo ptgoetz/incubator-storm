@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Copyright 2014 The Apache Software Foundation
-# 
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -56,4 +56,4 @@ export STORM_BASE_DIR
 
 . ${STORM_BASE_DIR}/bin/storm-config.sh
 
-$PYTHON ${STORM_BIN_DIR}/storm.py $@
+exec $PYTHON ${STORM_BIN_DIR}/storm.py $@
