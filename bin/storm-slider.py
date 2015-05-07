@@ -254,8 +254,7 @@ def quicklinks():
         sys.exit(1)
 
     if 'user' in CMD_OPTS.keys():
-        all_args.append("--user")
-        all_args.append(CMD_OPTS['user'])
+        all_args.append( "--user "+CMD_OPTS['user'])
 
     #os.spawnvp(os.P_WAIT,SLIDER_CMD, all_args)
     cmd = [SLIDER_CMD] + all_args[1:]
