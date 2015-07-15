@@ -86,6 +86,8 @@
             <outputDirectory>external/storm-hdfs</outputDirectory>
             <includes>
                 <include>storm*jar</include>
+				<include>hadoop-aws*jar</include>
+				<include>hadoop-azure*jar</include>
             </includes>
         </fileSet>
         <fileSet>
