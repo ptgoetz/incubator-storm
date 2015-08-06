@@ -36,8 +36,8 @@ public class TBackoffConnect {
 
         _retryTimes = retryTimes;
         waitGrabber = new StormBoundedExponentialBackoffRetry(retryInterval,
-                                                         retryTimes,
-                                                         retryIntervalCeiling);
+                                                              retryIntervalCeiling,
+                                                              retryTimes);
     }
 
     public TTransport doConnectWithRetry(ITransportPlugin transportPlugin, TTransport underlyingTransport, String host) throws IOException {
