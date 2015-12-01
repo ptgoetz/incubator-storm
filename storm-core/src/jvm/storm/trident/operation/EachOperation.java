@@ -17,6 +17,9 @@
  */
 package storm.trident.operation;
 
+/**
+ * Marker interface for {@link storm.trident.operation.Filter}s and {@link storm.trident.operation.Function}s
+ */
 public interface EachOperation extends Operation {
    
 }
