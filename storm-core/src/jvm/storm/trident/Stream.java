@@ -57,6 +57,23 @@ import storm.trident.state.StateSpec;
 import storm.trident.state.StateUpdater;
 import storm.trident.util.TridentUtils;
 
+/**
+ * A Stream represents the core data model in Trident, and can be thought of as a "stream" of tuples that are processed
+ * as a series of small batches. A stream is partitioned accross the nodes in the in the cluster, and operations are
+ * applied to a stream in parallel accross each partition.
+ *
+ * There are five types of operations that can be performed on streams in Trident
+ *
+ * 1. **Partiton-Local Operations** - Operations that are applied locally to each partition and do not involve network
+ * transfer
+ * 2. **Repartitioning Operations** - Operations that that change how tuples are partitioned across tasks(thus causing
+ * network transfer), but do not change the content of the stream.
+ * 3. **Aggregation Operations** - Operations that *may* repartition a stream (thus causing network transfer)
+ * 4. **Grouping Operations** - Operations that repartition a stream on specific fields and group togethertuples whose
+ * fields values are equal.
+ * 5. **Merge and Join Operations** - Operations that combine different streams together.
+ *
+ */
 // TODO: need to be able to replace existing fields with the function fields (like Cascading Fields.REPLACE)
 public class Stream implements IAggregatableStream {
     Node _node;
@@ -68,61 +85,144 @@ public class Stream implements IAggregatableStream {
         _node = node;
         _name = name;
     }
-    
+
+    /**
+     * Applies a label to the stream. Naming a stream will append the label to the name of the bolt(s) created by
+     * Trident and will be visible in the Storm UI.
+     *
+     * @param name - The label to apply to the stream
+     * @return
+     */
     public Stream name(String name) {
         return new Stream(_topology, name, _node);
     }
-    
+
+    /**
+     * Applies a parallelism hint to a stream.
+     *
+     * @param hint
+     * @return
+     */
     public Stream parallelismHint(int hint) {
         _node.parallelismHint = hint;
         return this;
     }
-        
+
+    /**
+     * Filters out fields from a stream, resulting in a Stream containing only the fields specified by `keepFields`.
+     *
+     * For example, if you had a Stream `mystream` containing the fields `["a", "b", "c","d"]`, calling"
+     *
+     * ```java
+     * mystream.project(new Fields("b", "d"))
+     * ```
+     *
+     * would produce a stream containing only the fields `["b", "d"]`.
+     *
+     *
+     * @param keepFields The fields in the Stream to keep
+     * @return
+     */
     public Stream project(Fields keepFields) {
         projectionValidation(keepFields);
         return _topology.addSourcedNode(this, new ProcessorNode(_topology.getUniqueStreamId(), _name, keepFields, new Fields(), new ProjectedProcessor(keepFields)));
     }
 
+    /**
+     * ## Repartitioning Operation
+     *
+     * @param fields
+     * @return
+     */
     public GroupedStream groupBy(Fields fields) {
         projectionValidation(fields);
         return new GroupedStream(this, fields);        
     }
-    
+
+    /**
+     * ## Repartitioning Operation
+     *
+     * @param fields
+     * @return
+     */
     public Stream partitionBy(Fields fields) {
         projectionValidation(fields);
         return partition(Grouping.fields(fields.toList()));
     }
-    
+
+    /**
+     * ## Repartitioning Operation
+     *
+     * @param partitioner
+     * @return
+     */
     public Stream partition(CustomStreamGrouping partitioner) {
         return partition(Grouping.custom_serialized(Utils.javaSerialize(partitioner)));
     }
-    
+
+    /**
+     * ## Repartitioning Operation
+     *
+     * @return
+     */
     public Stream shuffle() {
         return partition(Grouping.shuffle(new NullStruct()));
     }
 
+    /**
+     * ## Repartitioning Operation
+     *
+     * @return
+     */
     public Stream localOrShuffle() {
         return partition(Grouping.local_or_shuffle(new NullStruct()));
     }
+
+    /**
+     * ## Repartitioning Operation
+     *
+     * @return
+     */
     public Stream global() {
         // use this instead of storm's built in one so that we can specify a singleemitbatchtopartition
         // without knowledge of storm's internals
         return partition(new GlobalGrouping());
     }
-    
+
+    /**
+     * ## Repartitioning Operation
+     *
+     * @return
+     */
     public Stream batchGlobal() {
         // the first field is the batch id
         return partition(new IndexHashGrouping(0));
     }
-        
+
+    /**
+     * ## Repartitioning Operation
+     *
+     * @return
+     */
     public Stream broadcast() {
         return partition(Grouping.all(new NullStruct()));
     }
-    
+
+    /**
+     * ## Repartitioning Operation
+     *
+     * @return
+     */
     public Stream identityPartition() {
         return partition(new IdentityGrouping());
     }
-    
+
+    /**
+     * ## Repartitioning Operation
+     *
+     * @param grouping
+     * @return
+     */
     public Stream partition(Grouping grouping) {
         if(_node instanceof PartitionNode) {
             return each(new Fields(), new TrueFilter()).partition(grouping);
