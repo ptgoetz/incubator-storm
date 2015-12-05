@@ -247,6 +247,26 @@ public class Stream implements IAggregatableStream {
         }
     }
 
+    @Override
+    public Stream each(Fields inputFields, Function function, Fields functionFields) {
+        projectionValidation(inputFields);
+        return _topology.addSourcedNode(this,
+                new ProcessorNode(_topology.getUniqueStreamId(),
+                        _name,
+                        TridentUtils.fieldsConcat(getOutputFields(), functionFields),
+                        functionFields,
+                        new EachProcessor(inputFields, function)));
+    }
+
+    public Stream each(Function function, Fields functionFields) {
+        return each(null, function, functionFields);
+    }
+
+    public Stream each(Fields inputFields, Filter filter) {
+        return each(inputFields, new FilterExecutor(filter), new Fields());
+    }
+
+
     /**
      * Applies an `Assembly` to this `Stream`.
      *
@@ -256,17 +276,6 @@ public class Stream implements IAggregatableStream {
      */
     public Stream applyAssembly(Assembly assembly) {
         return assembly.apply(this);
-    }
-    
-    @Override
-    public Stream each(Fields inputFields, Function function, Fields functionFields) {
-        projectionValidation(inputFields);
-        return _topology.addSourcedNode(this,
-                new ProcessorNode(_topology.getUniqueStreamId(),
-                    _name,
-                    TridentUtils.fieldsConcat(getOutputFields(), functionFields),
-                    functionFields,
-                    new EachProcessor(inputFields, function)));
     }
 
     //creates brand new tuples with brand new fields
@@ -317,14 +326,6 @@ public class Stream implements IAggregatableStream {
     public TridentState partitionPersist(StateSpec stateSpec, Fields inputFields, StateUpdater updater) {
       return partitionPersist(stateSpec, inputFields, updater, new Fields());        
     }
-    
-    public Stream each(Function function, Fields functionFields) {
-        return each(null, function, functionFields);
-    }
-    
-    public Stream each(Fields inputFields, Filter filter) {
-        return each(inputFields, new FilterExecutor(filter), new Fields());
-    }    
     
     public ChainedAggregatorDeclarer chainedAgg() {
         return new ChainedAggregatorDeclarer(this, new BatchGlobalAggScheme());
