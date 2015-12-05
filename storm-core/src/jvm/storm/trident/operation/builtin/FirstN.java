@@ -27,7 +27,11 @@ import storm.trident.operation.BaseAggregator;
 import storm.trident.operation.TridentCollector;
 import storm.trident.tuple.TridentTuple;
 
-
+/**
+ *
+ * An {@link storm.trident.operation.Assembly} implementation
+ *
+ */
 public class FirstN implements Assembly {
 
     Aggregator _agg;

@@ -69,7 +69,7 @@ import storm.trident.util.TridentUtils;
  * 2. **Repartitioning Operations** - Operations that that change how tuples are partitioned across tasks(thus causing
  * network transfer), but do not change the content of the stream.
  * 3. **Aggregation Operations** - Operations that *may* repartition a stream (thus causing network transfer)
- * 4. **Grouping Operations** - Operations that repartition a stream on specific fields and group togethertuples whose
+ * 4. **Grouping Operations** - Operations that may repartition a stream on specific fields and group together tuples whose
  * fields values are equal.
  * 5. **Merge and Join Operations** - Operations that combine different streams together.
  *
@@ -129,7 +129,7 @@ public class Stream implements IAggregatableStream {
     }
 
     /**
-     * ## Repartitioning Operation
+     * ## Grouping Operation
      *
      * @param fields
      * @return
@@ -163,6 +163,8 @@ public class Stream implements IAggregatableStream {
     /**
      * ## Repartitioning Operation
      *
+     * Use random round robin algorithm to evenly redistribute tuples across all target partitions
+     *
      * @return
      */
     public Stream shuffle() {
@@ -172,15 +174,20 @@ public class Stream implements IAggregatableStream {
     /**
      * ## Repartitioning Operation
      *
+     * Use random round robin algorithm to evenly redistribute tuples across all target partitions, with a preference
+     * for local tasks.
+     *
      * @return
      */
     public Stream localOrShuffle() {
         return partition(Grouping.local_or_shuffle(new NullStruct()));
     }
 
+
     /**
      * ## Repartitioning Operation
      *
+     * All tuples are sent to the same partition. The same partition is chosen for all batches in the stream.
      * @return
      */
     public Stream global() {
@@ -192,6 +199,9 @@ public class Stream implements IAggregatableStream {
     /**
      * ## Repartitioning Operation
      *
+     *  All tuples in the batch are sent to the same partition. Different batches in the stream may go to different
+     *  partitions.
+     *
      * @return
      */
     public Stream batchGlobal() {
@@ -201,6 +211,9 @@ public class Stream implements IAggregatableStream {
 
     /**
      * ## Repartitioning Operation
+     *
+     * Every tuple is replicated to all target partitions. This can useful during DRPC – for example, if you need to do
+     * a stateQuery on every partition of data.
      *
      * @return
      */
@@ -220,6 +233,9 @@ public class Stream implements IAggregatableStream {
     /**
      * ## Repartitioning Operation
      *
+     * This method takes in a custom partitioning function that implements
+     * {@link backtype.storm.grouping.CustomStreamGrouping}
+     *
      * @param grouping
      * @return
      */
@@ -230,7 +246,14 @@ public class Stream implements IAggregatableStream {
             return _topology.addSourcedNode(this, new PartitionNode(_node.streamId, _name, getOutputFields(), grouping));       
         }
     }
-    
+
+    /**
+     * Applies an `Assembly` to this `Stream`.
+     *
+     * @see storm.trident.operation.Assembly
+     * @param assembly
+     * @return
+     */
     public Stream applyAssembly(Assembly assembly) {
         return assembly.apply(this);
     }

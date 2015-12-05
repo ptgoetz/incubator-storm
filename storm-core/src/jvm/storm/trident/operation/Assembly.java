@@ -19,7 +19,26 @@ package storm.trident.operation;
 
 import storm.trident.Stream;
 
-
+/**
+ * The `Assembly` interface provides a means to encapsulate logic applied to a {@link storm.trident.Stream}.
+ *
+ * Usage:
+ *
+ * ```java
+ * Stream mystream = ...;
+ * Stream assemblyStream = mystream.applyAssembly(myAssembly);
+ * ```
+ *
+ * @see storm.trident.Stream
+ * @see storm.trident.operation.builtin.FirstN
+ *
+ */
 public interface Assembly {
+    /**
+     * Applies the `Assembly` to a given {@link storm.trident.Stream}
+     *
+     * @param input
+     * @return
+     */
     Stream apply(Stream input);
 }
