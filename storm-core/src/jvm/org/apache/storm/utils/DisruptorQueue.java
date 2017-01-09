@@ -31,6 +31,7 @@ import com.lmax.disruptor.TimeoutException;
 import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.dsl.ProducerType;
 
+import org.apache.storm.Config;
 import org.apache.storm.metric.api.IStatefulObject;
 import org.apache.storm.metric.internal.RateTracker;
 import org.apache.storm.metrics2.DisruptorMetrics;
@@ -69,8 +70,14 @@ public class DisruptorQueue implements IStatefulObject {
 
     private static int getNumFlusherPoolThreads() {
         int numThreads = 100;
+        	Map<String, Object> conf = Utils.readStormConfig();
         try {
-            String threads = System.getProperty("num_flusher_pool_threads", "100");
+        	numThreads = Utils.getInt(conf.get(Config.STORM_WORKER_DISRUPTOR_FLUSHER_MAX_POOL_SIZE), numThreads);
+        } catch (Exception e) {
+        	LOG.warn("Error while trying to read system config", e);
+        }
+        try {
+            String threads = System.getProperty("num_flusher_pool_threads", String.valueOf(numThreads));
             numThreads = Integer.parseInt(threads);
         } catch (Exception e) {
             LOG.warn("Error while parsing number of flusher pool threads", e);
