@@ -26,6 +26,8 @@ import org.apache.storm.task.WorkerTopologyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +40,8 @@ public class StormMetricRegistry {
     private static final MetricRegistry REGISTRY = new MetricRegistry();
 
     private static final List<StormReporter> REPORTERS = new ArrayList<>();
+
+    private static String hostName = null;
 
     public static <T> SimpleGauge<T>  gauge(T initialValue, String name, String topologyId, Integer port){
         SimpleGauge<T> gauge = new SimpleGauge<>(initialValue);
@@ -64,12 +68,24 @@ public class StormMetricRegistry {
 
     public static Meter meter(String name, WorkerTopologyContext context, String componentId){
         // storm.worker.{topology}.{host}.{port}
-        // TODO: hostname
-        String metricName = String.format("storm.worker.%s.%s.%s-%s", context.getStormId(), componentId, context.getThisWorkerPort(), name);
+        String metricName = String.format("storm.worker.%s.%s.%s.%s-%s", context.getStormId(), hostName,
+                componentId, context.getThisWorkerPort(), name);
         return REGISTRY.meter(metricName);
     }
 
     public static void start(Map<String, Object> stormConfig, DaemonType type){
+        String localHost = (String)stormConfig.get(Config.STORM_LOCAL_HOSTNAME);
+        if(localHost != null){
+            hostName = localHost;
+        } else {
+            try {
+                hostName = InetAddress.getLocalHost().getCanonicalHostName();
+            } catch (UnknownHostException e) {
+                 LOG.warn("Unable to determine hostname while starting the metrics system. Hostname ill be reported" +
+                         " as 'localhost'.");
+            }
+        }
+
         LOG.info("Starting metrics reporters...");
         List<Map<String, Object>> reporterList = (List<Map<String, Object>>)stormConfig.get(Config.STORM_METRICS_REPORTERS);
         for(Map<String, Object> reporterConfig : reporterList){
@@ -104,12 +120,10 @@ public class StormMetricRegistry {
 
     }
 
-
     private static StormReporter instantiate(String klass) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         Class<?> c = Class.forName(klass);
         return  (StormReporter) c.newInstance();
     }
-
 
     public static void stop(){
         for(StormReporter sr : REPORTERS){
